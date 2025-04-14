@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poker Pre-flop Trainer V2.2</title> <!-- Oppdatert tittel -->
+    <title>Poker Pre-flop Trainer V2.3</title> <!-- Oppdatert tittel -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Poker Pre-flop GTO Trainer V2.2</h1> <!-- Oppdatert tittel -->
+    <h1>Poker Pre-flop GTO Trainer V2.3</h1> <!-- Oppdatert tittel -->
 
     <div class="controls">
         <label for="gameType">Bord:</label>
@@ -33,7 +33,6 @@
             <!-- Options fylles dynamisk av JS -->
         </select>
 
-        <!-- Nytt element for forsinkelse -->
         <label for="delayInput">Neste Hånd Forsinkelse (sek):</label>
         <input type="number" id="delayInput" value="3" min="0" max="30" step="1" style="width: 50px;">
 
@@ -65,11 +64,8 @@
         <p id="feedbackText"></p>
         <p id="correctActionText"></p>
         <div id="rangeDisplayContainer" style="display: none;">
-             <!-- Tittel oppdateres av JS -->
             <h3 id="rangeTitle">Anbefalt Range (<span id="rangeSituationInfo"></span>):</h3>
-            <div id="rangeGrid">
-                <!-- Range grid genereres av JS -->
-            </div>
+            <div id="rangeGrid"></div>
             <div class="legend">
                  <span class="legend-raise">Raise/3Bet/Push</span>
                  <span class="legend-call">Call</span>
