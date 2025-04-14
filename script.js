@@ -1,20 +1,20 @@
-// script.js (Versjon 5 - Fjernet fatal range check i setupNewHand)
+// script.js (Versjon 6 - UI Forbedringer: Hero nederst, actions++)
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Globale Variabler & Tilstand ---
     let currentDeck = [];
     let heroHand = [];
-    let currentHeroPositionName = '';
-    let currentDealerPositionIndex = -1;
+    let currentHeroPositionName = ''; // Logisk posisjon (UTG, BTN...)
+    let currentDealerPositionIndex = -1; // Sete-indeks for dealer
     let currentScenario = 'RFI';
     let currentScenarioDescription = '';
     let actionsPrecedingHero = [];
     let numPlayers = 9;
     let currentStackDepth = '40bb';
     let currentTrainingMode = 'standard';
-    let currentFixedPosition = null;
+    let currentFixedPosition = null; // Posisjonen som trenes i Trainer mode
     let currentPotSizeBB = 1.5;
-    let firstActionPlayerIndex = -1;
+    let firstActionPlayerIndex = -1; // Sete-indeks for første som handler (relativt til Hero)
 
     // --- DOM Elementer ---
     const gameTypeSelect = document.getElementById('gameType');
@@ -24,8 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const positionSelect = document.getElementById('positionSelect');
     const newHandBtn = document.getElementById('newHandBtn');
     const pokerTable = document.querySelector('.poker-table');
-    const heroPositionSpan = document.getElementById('heroPosition');
-    const heroCardsContainer = document.querySelector('.hero-cards');
+    const heroPositionSpan = document.getElementById('heroPosition'); // Viser logisk posisjon
+    // Fjernet heroCardsContainer, kort vises nå i setet
     const actionButtonsContainer = document.querySelector('.action-buttons');
     const feedbackText = document.getElementById('feedbackText');
     const correctActionText = document.getElementById('correctActionText');
@@ -42,11 +42,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
     const positions9max = ["UTG", "UTG+1", "MP", "MP+1", "HJ", "CO", "BTN", "SB", "BB"];
     const positions6max = ["UTG", "MP", "CO", "BTN", "SB", "BB"];
-    const HERO_SEAT_INDEX = 0; // Hero sitter alltid i sete 0 visuelt
+    let VISUAL_HERO_SEAT_INDEX; // Settes basert på numPlayers
 
     // --- Funksjoner ---
 
-    function createDeck() {
+    function calculateVisualHeroSeatIndex() {
+        VISUAL_HERO_SEAT_INDEX = Math.floor(numPlayers / 2); // Plasserer Hero nederst
+        console.log(`Visual Hero Seat Index set to: ${VISUAL_HERO_SEAT_INDEX} for ${numPlayers} players.`);
+    }
+
+    function createDeck() { /* ... (uendret) ... */
          const deck = [];
          for (const suit of suits) {
              for (const rank of ranks) {
@@ -56,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
          return deck;
     }
 
-    function shuffleDeck(deck) {
+    function shuffleDeck(deck) { /* ... (uendret) ... */
         for (let i = deck.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [deck[i], deck[j]] = [deck[j], deck[i]];
@@ -64,177 +69,153 @@ document.addEventListener('DOMContentLoaded', () => {
         return deck;
     }
 
-    // Konverterer hånd (['Ac', 'Kd']) til standard nøkkel ('AKs'/'AKo'/'AA')
-    function getHandKey(cards) {
+    function getHandKey(cards) { /* ... (uendret) ... */
          if (!cards || cards.length !== 2) return null;
          const card1Rank = cards[0][0];
          const card1Suit = cards[0][1];
          const card2Rank = cards[1][0];
          const card2Suit = cards[1][1];
-         const rankOrder = ranks.slice().reverse(); // ['A', 'K', ..., '2']
+         const rankOrder = ranks.slice().reverse();
          const rank1Index = rankOrder.indexOf(card1Rank);
          const rank2Index = rankOrder.indexOf(card2Rank);
-
-         // Sorter etter rank (A høyest)
          const highRank = rank1Index < rank2Index ? card1Rank : card2Rank;
          const lowRank = rank1Index < rank2Index ? card2Rank : card1Rank;
-
          const suited = card1Suit === card2Suit;
-
-         if (highRank === lowRank) { // Pocket pair
-             return highRank + lowRank;
-         } else { // Ikke par
-             return highRank + lowRank + (suited ? 's' : 'o');
-         }
+         if (highRank === lowRank) { return highRank + lowRank; }
+         else { return highRank + lowRank + (suited ? 's' : 'o'); }
     }
 
-    // Kalkulerer posisjonsnavn basert på seteindeks, dealerknappens indeks og antall spillere
-    function calculatePositionName(seatIndex, dealerIndex, numPlayers) {
+    function calculatePositionName(seatIndex, dealerIndex, numPlayers) { /* ... (uendret, bruker logiske indekser) ... */
         const positions = numPlayers === 9 ? positions9max : positions6max;
         if (dealerIndex < 0 || !positions || positions.length !== numPlayers) {
             console.error("Feil i calculatePositionName - ugyldige input", seatIndex, dealerIndex, numPlayers);
-            return "??"; // Sikkerhetssjekk
+            return "??";
         }
-
-        // Hvor mange seter er denne spilleren etter dealeren?
         const relativeIndex = (seatIndex - dealerIndex + numPlayers) % numPlayers;
-
-        // Finn standard array-indeks for BTN
         const btnListIndex = positions.indexOf("BTN");
         if (btnListIndex === -1) {
             console.error("Fant ikke BTN i positions array for", numPlayers);
             return "??";
         }
-
-        // Kalkuler posisjonens indeks i arrayet ved å starte fra BTN og telle frem 'relativeIndex' steg
-        // Eksempel 9max: BTN er [6]. Hvis sete 0 er 3 plasser etter dealer 6 (relativeIndex=3),
-        // så er posisjonen (6 + 3) % 9 = 0, som er UTG.
-        // Eksempel 9max: Hvis sete 8 er 2 plasser etter dealer 6 (relativeIndex=2),
-        // så er posisjonen (6 + 2) % 9 = 8, som er BB.
         const adjustedListIndex = (btnListIndex + relativeIndex) % numPlayers;
-
-        return positions[adjustedListIndex] || "??"; // Returner navn
+        return positions[adjustedListIndex] || "??";
     }
 
-     // Finner den faktiske seteindeksen (0 til numPlayers-1) for et gitt posisjonsnavn
-     function getActualSeatIndex(positionName, dealerIndex, numPlayers) {
+     function getActualSeatIndex(positionName, dealerIndex, numPlayers) { /* ... (uendret, returnerer logisk seteindeks) ... */
          const positions = numPlayers === 9 ? positions9max : positions6max;
          if (dealerIndex < 0 || !positions || positions.length !== numPlayers) {
              console.error("Feil i getActualSeatIndex - ugyldige input", positionName, dealerIndex, numPlayers);
-             return -1; // Sikkerhetssjekk
+             return -1;
          }
-
          const listIndex = positions.indexOf(positionName);
          if (listIndex === -1) {
-             console.warn(`Kunne ikke finne posisjon '${positionName}' i list for ${numPlayers}max.`);
-             return -1; // Posisjon finnes ikke
+             // console.warn(`Kunne ikke finne posisjon '${positionName}' i list for ${numPlayers}max.`);
+             return -1;
          }
-
          const btnListIndex = positions.indexOf("BTN");
           if (btnListIndex === -1) {
              console.error("Fant ikke BTN i positions array for", numPlayers);
              return -1;
          }
-
-          // Hvor mange steg *er* denne posisjonen forbi BTN i listen?
-          // Eksempel 9max: UTG (0) er (0 - 6 + 9) % 9 = 3 steg forbi BTN i listen.
-          // Eksempel 9max: BB (8) er (8 - 6 + 9) % 9 = 2 steg forbi BTN i listen.
           const stepsFromBtnInList = (listIndex - btnListIndex + numPlayers) % numPlayers;
-
-         // Den faktiske seteindeksen er dealerens indeks pluss disse stegene.
-         // Eksempel 9max: Dealer er 6. UTG er 3 steg forbi BTN. Faktisk sete = (6 + 3) % 9 = 0.
-         // Eksempel 9max: Dealer er 6. BB er 2 steg forbi BTN. Faktisk sete = (6 + 2) % 9 = 8.
          const actualSeatIndex = (dealerIndex + stepsFromBtnInList) % numPlayers;
-
          return actualSeatIndex;
      }
 
-
-    function populatePositionSelect() {
+    function populatePositionSelect() { /* ... (uendret) ... */
         const positions = numPlayers === 9 ? positions9max : positions6max;
         positionSelect.innerHTML = '';
-        // Lar brukeren trene alle posisjoner, selv blinds (selv om RFI ikke gir mening der)
-        // Filtrer ut blinds hvis du kun vil trene RFI/vs RFI:
-        // const trainablePositions = positions.filter(p => !['SB', 'BB'].includes(p));
-        const trainablePositions = positions;
+        const trainablePositions = positions; // La alle være valgbare
         trainablePositions.forEach(pos => {
             const option = document.createElement('option');
             option.value = pos;
             option.textContent = pos;
             positionSelect.appendChild(option);
         });
-        // Default til en vanlig posisjon
         let defaultPos = "CO";
         if (!trainablePositions.includes(defaultPos)) defaultPos = "BTN";
-        if (!trainablePositions.includes(defaultPos)) defaultPos = positions[Math.floor(positions.length / 2)]; // Fallback
-
+        if (!trainablePositions.includes(defaultPos)) defaultPos = positions[Math.floor(positions.length / 2)];
         positionSelect.value = defaultPos;
-        currentFixedPosition = positionSelect.value; // Sett initielt
+        currentFixedPosition = positionSelect.value;
     }
 
-    // Beregner x,y-koordinater for et sete rundt bordet
-    function getSeatPosition(seatIndex, totalPlayers) {
-         const angleOffset = -90; // Start på toppen
+    function getSeatPosition(seatIndex, totalPlayers) { /* ... (uendret, plasserer visuelt) ... */
+         const angleOffset = -90;
          const angleIncrement = 360 / totalPlayers;
-         const angle = angleOffset + seatIndex * angleIncrement;
-         const angleRad = angle * (Math.PI / 180);
-         // Juster radius for å få en mer oval form
-         const radiusX = 45; // Bredere enn høy
-         const radiusY = 42; // Litt smalere
+         const targetAngle = angleOffset + seatIndex * angleIncrement;
+
+         // Juster for å få VISUAL_HERO_SEAT_INDEX til å være nederst (ca 90 grader)
+         const heroTargetAngle = 90;
+         const currentHeroAngle = angleOffset + VISUAL_HERO_SEAT_INDEX * angleIncrement;
+         const rotationAdjustment = heroTargetAngle - currentHeroAngle;
+         const finalAngle = targetAngle + rotationAdjustment;
+
+         const angleRad = finalAngle * (Math.PI / 180);
+         const radiusX = 45;
+         const radiusY = 42;
          const left = 50 + radiusX * Math.cos(angleRad);
          const top = 50 + radiusY * Math.sin(angleRad);
          return { top: `${top}%`, left: `${left}%` };
     }
 
-     // Beregner posisjon for dealerknappen relativt til dealerens sete
-     function getButtonPosition(dealerSeatElement) {
-        if (!dealerSeatElement) return { top: '50%', left: '50%' }; // Fallback
+     function getButtonPosition(dealerSeatElement) { /* ... (uendret) ... */
+        if (!dealerSeatElement) return { top: '50%', left: '50%' };
         const tableRect = pokerTable.getBoundingClientRect();
         const seatRect = dealerSeatElement.getBoundingClientRect();
-
-        // Sentrum av setet relativt til bordet
         const seatCenterX = (seatRect.left + seatRect.width / 2) - tableRect.left;
         const seatCenterY = (seatRect.top + seatRect.height / 2) - tableRect.top;
-
-        // Beregn vinkel fra bordets sentrum til setets sentrum
         const tableCenterX = tableRect.width / 2;
         const tableCenterY = tableRect.height / 2;
         const angleRad = Math.atan2(seatCenterY - tableCenterY, seatCenterX - tableCenterX);
-
-        // Plasser knappen litt utenfor setet i samme retning
-        const buttonOffset = 20; // Piksler utenfor setet
+        const buttonOffset = 25; // Økt litt for synlighet
         const btnLeft = seatCenterX + buttonOffset * Math.cos(angleRad) - dealerButtonElement.offsetWidth / 2;
         const btnTop = seatCenterY + buttonOffset * Math.sin(angleRad) - dealerButtonElement.offsetHeight / 2;
-
         return { top: `${btnTop}px`, left: `${btnLeft}px` };
      }
 
-    // Setter opp det visuelle bordet med riktig antall seter
+    // Setter opp det visuelle bordet med Hero nederst
     function setupTableUI() {
-        pokerTable.innerHTML = ''; // Tøm bordet først
-        // Legg til elementer som skal være *inne* i bordet, men ikke seter
+        calculateVisualHeroSeatIndex(); // Bestem Hero sin visuelle plass
+        pokerTable.innerHTML = '';
         pokerTable.appendChild(dealerButtonElement);
-        pokerTable.appendChild(potDisplaySpan.parentNode); // Legg til pot-diven
-        pokerTable.appendChild(scenarioDescriptionElement); // Legg til scenario-beskrivelse
+        pokerTable.appendChild(potDisplaySpan.parentNode);
+        pokerTable.appendChild(scenarioDescriptionElement);
 
+        let opponentCounter = 1;
         for (let i = 0; i < numPlayers; i++) {
             const seatDiv = document.createElement('div');
             seatDiv.classList.add('seat');
-            seatDiv.dataset.seatId = i; // Lagre seteindeks
-            const pos = getSeatPosition(i, numPlayers);
+            seatDiv.dataset.seatId = i; // Lagre den *logiske* seteindeksen
+            const pos = getSeatPosition(i, numPlayers); // Få visuell posisjon
             seatDiv.style.left = pos.left;
             seatDiv.style.top = pos.top;
-            // Initialiser innhold for hvert sete
+
+            let playerName;
+            if (i === VISUAL_HERO_SEAT_INDEX) {
+                playerName = "Hero";
+                seatDiv.classList.add('hero-seat'); // Merk Hero visuelt
+            } else {
+                playerName = `Spiller ${opponentCounter++}`;
+            }
+
+            // Bruk en indre div for innhold for bedre kontroll
             seatDiv.innerHTML = `
-                <span class="player-name">Spiller ${i + 1}</span>
-                <span class="player-position">--</span>
-                <div class="player-cards"></div>
-                <span class="player-action"></span>`;
+                <div class="seat-content">
+                    <div class="player-info">
+                        <span class="player-name">${playerName}</span>
+                        <span class="player-position">--</span>
+                    </div>
+                    <div class="player-cards">
+                         <div class="card card-placeholder"></div>
+                         <div class="card card-placeholder"></div>
+                    </div>
+                     <span class="player-action"></span>
+                 </div>`;
             pokerTable.appendChild(seatDiv);
         }
     }
 
-    // Oppdaterer posisjonsnavnene på setene basert på dealerens posisjon
+    // Oppdaterer logiske posisjonsnavn på de visuelle setene
     function updatePlayerPositionsRelativeToButton() {
         if (currentDealerPositionIndex < 0) {
             console.error("Dealer position not set before updating positions");
@@ -242,60 +223,56 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const seats = pokerTable.querySelectorAll('.seat');
-        let heroActualPosition = "??"; // Tilbakestill før beregning
+        let heroActualPosition = "??";
 
         seats.forEach((seat) => {
-            const actualSeatIndex = parseInt(seat.dataset.seatId);
-            // Beregn posisjonsnavnet for dette setet
-            const positionName = calculatePositionName(actualSeatIndex, currentDealerPositionIndex, numPlayers);
+            const logicalSeatIndex = parseInt(seat.dataset.seatId); // Hent den lagrede logiske indeksen
+            const positionName = calculatePositionName(logicalSeatIndex, currentDealerPositionIndex, numPlayers);
 
             const positionSpan = seat.querySelector('.player-position');
             if (positionSpan) {
                 positionSpan.textContent = positionName;
             }
-            // Nullstill handling og klasser
-            const actionSpan = seat.querySelector('.player-action');
-            if(actionSpan) actionSpan.textContent = '';
-            seat.classList.remove('hero-seat', 'action-on');
+            // Nullstill handlingstekst og visuelle klasser (unntatt hero-seat)
+            updateSeatActionVisuals(seat, null); // Bruk hjelpefunksjon
+            seat.classList.remove('action-on');
 
-            // Marker Hero sitt sete
-            if (actualSeatIndex === HERO_SEAT_INDEX) {
-                seat.classList.add('hero-seat');
-                heroActualPosition = positionName; // Lagre Hero sin beregnede posisjon
+            if (logicalSeatIndex === VISUAL_HERO_SEAT_INDEX) {
+                // Dette er Hero sitt visuelle sete, lagre den logiske posisjonen
+                heroActualPosition = positionName;
             }
         });
 
-         // Oppdater global state og UI for Hero sin posisjon
-         currentHeroPositionName = heroActualPosition;
-         heroPositionSpan.textContent = currentHeroPositionName;
+         currentHeroPositionName = heroActualPosition; // Oppdater global state
+         heroPositionSpan.textContent = currentHeroPositionName; // Oppdater UI for posisjon
 
-        // Flytt dealerknappen
+        // Flytt dealerknappen til riktig *visuelt* sete
         const dealerSeatElement = pokerTable.querySelector(`.seat[data-seat-id="${currentDealerPositionIndex}"]`);
         if(dealerSeatElement) {
             const btnPos = getButtonPosition(dealerSeatElement);
             dealerButtonElement.style.top = btnPos.top;
             dealerButtonElement.style.left = btnPos.left;
         } else {
-             console.warn("Could not find dealer seat element for button positioning.");
              dealerButtonElement.style.top = '10%'; dealerButtonElement.style.left = '10%'; // Fallback
         }
 
-         // Marker hvem som har handlingen (hvis bestemt)
+         // Marker hvem som har handlingen
           if (firstActionPlayerIndex !== -1) {
-               const actionSeat = pokerTable.querySelector(`.seat[data-seat-id="${firstActionPlayerIndex}"]`);
-               if (actionSeat) actionSeat.classList.add('action-on');
-          } else if (HERO_SEAT_INDEX !== -1 && currentHeroPositionName !== '??') {
-              // Default til at Hero har action hvis ingen andre er satt
-                const heroSeatElement = pokerTable.querySelector(`.seat[data-seat-id="${HERO_SEAT_INDEX}"]`);
+               // Finn det *visuelle* setet for den som har handlingen
+               const actionSeatElement = pokerTable.querySelector(`.seat[data-seat-id="${firstActionPlayerIndex}"]`);
+               if (actionSeatElement) actionSeatElement.classList.add('action-on');
+          } else if (VISUAL_HERO_SEAT_INDEX !== -1 && currentHeroPositionName !== '??') {
+               // Default til at Hero har action
+                const heroSeatElement = pokerTable.querySelector(`.seat.hero-seat`); // Finn via klasse
                 if(heroSeatElement) heroSeatElement.classList.add('action-on');
           }
     }
 
-    // Hjelpefunksjon for å få rank/suit/klasse fra kortstreng (f.eks. 'Ac')
-    function getCardComponents(cardString) {
+
+    function getCardComponents(cardString) { /* ... (uendret) ... */
          if (!cardString || cardString.length < 2) return { rank: '?', suit: '', suitClass: '' };
-         const rank = cardString.slice(0, -1); // F.eks. 'A', 'K', 'T', '9'
-         const suitCode = cardString.slice(-1); // F.eks. 'c', 'd', 'h', 's'
+         const rank = cardString.slice(0, -1);
+         const suitCode = cardString.slice(-1);
          let suitSymbol = '';
          let suitClass = '';
          switch (suitCode) {
@@ -303,21 +280,32 @@ document.addEventListener('DOMContentLoaded', () => {
              case 'h': suitSymbol = '♥'; suitClass = 'hearts'; break;
              case 'd': suitSymbol = '♦'; suitClass = 'diamonds'; break;
              case 'c': suitSymbol = '♣'; suitClass = 'clubs'; break;
-             default: suitSymbol = '?'; // Ukjent suit?
          }
-         // Konverter 'T' til '10' for visning
          let displayRank = rank === 'T' ? '10' : rank;
          return { rank: displayRank, suit: suitSymbol, suitClass: suitClass };
     }
 
-    // Viser Hero sine kort i UI
+
+    // Viser Hero sine kort i det dedikerte Hero-setet nederst
     function displayHeroCards() {
-         heroCardsContainer.innerHTML = ''; // Tøm først
+         const heroSeat = pokerTable.querySelector('.seat.hero-seat'); // Finn Hero sitt sete
+         if (!heroSeat) {
+             console.error("Could not find Hero seat to display cards.");
+             return;
+         }
+         const cardsContainer = heroSeat.querySelector('.player-cards');
+         if (!cardsContainer) {
+             console.error("Could not find player-cards container in Hero seat.");
+             return;
+         }
+
+         cardsContainer.innerHTML = ''; // Tøm først
          if (heroHand.length === 2) {
              heroHand.forEach(card => {
                  const components = getCardComponents(card);
                  const cardDiv = document.createElement('div');
-                 cardDiv.classList.add('card', components.suitClass); // Legg til fargeklasse
+                 // Bruk klasser fra CSS for kort inni seter
+                 cardDiv.classList.add('card', components.suitClass);
                  cardDiv.innerHTML = `
                      <div class="card-rank card-top-left">
                          <div>${components.rank}</div>
@@ -328,272 +316,313 @@ document.addEventListener('DOMContentLoaded', () => {
                          <div>${components.rank}</div>
                          <div>${components.suit}</div>
                      </div>`;
-                 heroCardsContainer.appendChild(cardDiv);
+                 cardsContainer.appendChild(cardDiv);
              });
          } else {
-             // Vis kortholdere hvis ingen kort er delt ut
-             heroCardsContainer.innerHTML = `
+             // Vis kortholdere hvis ingen kort
+             cardsContainer.innerHTML = `
                  <div class="card card-placeholder"></div>
                  <div class="card card-placeholder"></div>`;
          }
     }
 
-    // Viser handlingene som skjedde før Hero sin tur på bordet
+    // Hjelpefunksjon for å oppdatere visuell stil og tekst for en handling på et sete
+    function updateSeatActionVisuals(seatElement, actionInfo) {
+        if (!seatElement) return;
+
+        const actionSpan = seatElement.querySelector('.player-action');
+        const playerCardsDiv = seatElement.querySelector('.player-cards');
+
+        // Fjern gamle action-klasser fra setet
+        seatElement.classList.remove('seat-folded', 'seat-called', 'seat-raised', 'seat-3bet', 'seat-pushed', 'seat-posted-blind');
+        // Fjern gamle action-klasser fra tekst-span
+        if (actionSpan) {
+            actionSpan.className = 'player-action'; // Reset classes
+            actionSpan.textContent = ''; // Clear text
+        }
+        // Vis kort-placeholders som standard (hvis ikke Hero)
+        if (playerCardsDiv && !seatElement.classList.contains('hero-seat')) {
+             playerCardsDiv.style.opacity = '1'; // Reset opacity
+             playerCardsDiv.innerHTML = `
+                 <div class="card card-placeholder"></div>
+                 <div class="card card-placeholder"></div>`;
+        }
+
+
+        if (!actionInfo) return; // Hvis null, bare nullstill
+
+        let actionText = '';
+        let actionClassSuffix = ''; // For span fargelegging
+        let seatClassSuffix = ''; // For sete bakgrunn/opacity
+
+        switch (actionInfo.actionType.toUpperCase()) {
+            case 'FOLD':
+                actionText = 'Fold';
+                actionClassSuffix = 'fold';
+                seatClassSuffix = 'folded';
+                // Skjul kortene helt ved fold
+                 if (playerCardsDiv && !seatElement.classList.contains('hero-seat')) {
+                    playerCardsDiv.innerHTML = '';
+                 }
+                break;
+            case 'CALL':
+                actionText = `Call ${actionInfo.amount} BB`;
+                actionClassSuffix = 'call';
+                seatClassSuffix = 'called';
+                break;
+            case 'RAISE':
+                actionText = `Raise ${actionInfo.amount} BB`;
+                actionClassSuffix = 'raise';
+                seatClassSuffix = 'raised';
+                break;
+            case '3B': // Behandle 3B likt som Raise visuelt her
+                actionText = `3-Bet ${actionInfo.amount} BB`;
+                actionClassSuffix = '3bet'; // Kan brukes for fargelegging
+                seatClassSuffix = 'raised'; // Bruk samme sete-stil
+                break;
+            case 'PUSH':
+                actionText = `Push ${actionInfo.amount} BB`;
+                actionClassSuffix = 'push';
+                seatClassSuffix = 'pushed'; // Kan ha egen stil
+                break;
+            case 'POST_SB':
+            case 'POST_BB':
+                actionText = `Post ${actionInfo.amount} BB`;
+                actionClassSuffix = 'post';
+                seatClassSuffix = 'posted-blind';
+                break;
+            default:
+                actionText = actionInfo.actionType;
+        }
+
+        if (actionSpan) {
+            actionSpan.textContent = actionText;
+            if (actionClassSuffix) {
+                 actionSpan.classList.add(`action-${actionClassSuffix}`);
+            }
+        }
+        if (seatClassSuffix) {
+            seatElement.classList.add(`seat-${seatClassSuffix}`);
+        }
+    }
+
+
+    // Viser handlingene som skjedde før Hero sin tur
     function displayPrecedingActions() {
-        const seats = pokerTable.querySelectorAll('.seat');
-        // Først, nullstill handlinger på alle seter unntatt Hero sin 'action-on' (som settes etterpå)
-        seats.forEach(seat => {
-             const actionSpan = seat.querySelector('.player-action');
-             if (actionSpan) actionSpan.textContent = '';
-             seat.classList.remove('action-on'); // Fjern action-markering
+        // Nullstill alle seter først (unntatt Hero sine kort)
+        pokerTable.querySelectorAll('.seat').forEach(seat => {
+            updateSeatActionVisuals(seat, null);
+            seat.classList.remove('action-on');
         });
 
+        // Vis faktiske handlinger
         actionsPrecedingHero.forEach(actionInfo => {
-             // Finn seteindeksen for posisjonen som gjorde handlingen
              const seatIndex = getActualSeatIndex(actionInfo.position, currentDealerPositionIndex, numPlayers);
              if (seatIndex === -1) {
                  console.warn(`Could not find seat index for position ${actionInfo.position} in displayPrecedingActions`);
-                 return; // Hopp over denne handlingen hvis posisjonen er ukjent
+                 return;
              }
+             // Finn det *visuelle* setet som tilsvarer den logiske indeksen
              const seatElement = pokerTable.querySelector(`.seat[data-seat-id="${seatIndex}"]`);
              if (seatElement) {
-                 const actionSpan = seatElement.querySelector('.player-action');
-                 if(actionSpan) {
-                     let actionText = ''; let actionClass = '';
-                     // Formater handlingsteksten
-                     switch (actionInfo.actionType.toUpperCase()) {
-                         case 'FOLD': actionText = 'Fold'; actionClass = 'fold'; break;
-                         case 'CALL': actionText = `Call ${actionInfo.amount} BB`; actionClass = 'call'; break;
-                         case 'RAISE': actionText = `Raise ${actionInfo.amount} BB`; actionClass = 'raise'; break;
-                         case 'PUSH': actionText = `Push ${actionInfo.amount} BB`; actionClass = 'push'; break;
-                         case 'POST_SB': actionText = `Post 0.5 BB`; actionClass = ''; break; // Ingen spesiell klasse for blinds
-                         case 'POST_BB': actionText = `Post 1 BB`; actionClass = ''; break;
-                         default: actionText = actionInfo.actionType; // Ukjent handlingstype?
-                     }
-                     actionSpan.textContent = actionText;
-                     actionSpan.className = 'player-action'; // Nullstill klasser først
-                     if (actionClass) actionSpan.classList.add(actionClass); // Legg til fargeklasse
-                 }
+                 updateSeatActionVisuals(seatElement, actionInfo);
              }
          });
 
-         // Sørg for at setet som faktisk har handlingen blir markert
+         // Marker hvem som har handlingen (vanligvis Hero i denne fasen)
          if (firstActionPlayerIndex !== -1) {
-             const actionSeat = pokerTable.querySelector(`.seat[data-seat-id="${firstActionPlayerIndex}"]`);
-             if (actionSeat) actionSeat.classList.add('action-on');
+             const actionSeatElement = pokerTable.querySelector(`.seat[data-seat-id="${firstActionPlayerIndex}"]`);
+             if (actionSeatElement) actionSeatElement.classList.add('action-on');
+         } else {
+             // Hvis ingen spesifikk, anta Hero
+              const heroSeatElement = pokerTable.querySelector(`.seat.hero-seat`);
+                if(heroSeatElement) heroSeatElement.classList.add('action-on');
          }
     }
 
-     // Aktiverer/deaktiverer handlingsknapper basert på scenario
-     function updateActionButtons() {
+     function updateActionButtons() { /* ... (uendret, logikken er basert på scenario/stack) ... */
          const buttons = actionButtonsContainer.querySelectorAll('button');
          buttons.forEach(btn => btn.disabled = true); // Start med å deaktivere alle
 
-         // RFI scenario: Fold, Raise, (Push hvis 10bb)
          if (currentScenario === 'RFI') {
              actionButtonsContainer.querySelector('[data-action="F"]').disabled = false;
              actionButtonsContainer.querySelector('[data-action="R"]').disabled = false;
              if (currentStackDepth === '10bb') {
                  actionButtonsContainer.querySelector('[data-action="P"]').disabled = false;
-                 actionButtonsContainer.querySelector('[data-action="R"]').disabled = true; // Bruk Push istedenfor Raise ved 10bb RFI
+                 actionButtonsContainer.querySelector('[data-action="R"]').disabled = true;
              }
          }
-         // Vs RFI scenario: Fold, Call, 3-Bet, (Push hvis 10bb)
          else if (currentScenario.startsWith('vs_')) {
              actionButtonsContainer.querySelector('[data-action="F"]').disabled = false;
              actionButtonsContainer.querySelector('[data-action="C"]').disabled = false;
              actionButtonsContainer.querySelector('[data-action="3B"]').disabled = false;
               if (currentStackDepth === '10bb') {
                  actionButtonsContainer.querySelector('[data-action="P"]').disabled = false;
-                 actionButtonsContainer.querySelector('[data-action="3B"]').disabled = true; // Bruk Push istedenfor 3Bet ved 10bb vs RFI
-                 // Call kan fortsatt være et alternativ, selv ved 10bb
+                 actionButtonsContainer.querySelector('[data-action="3B"]').disabled = true;
              }
          }
-         // Andre scenarioer (ikke implementert ennå)
-         else {
-             // Behold alle deaktivert
-         }
+         else { } // Behold alle deaktivert for ukjente scenarioer
      }
 
-    // Setter opp en ny hånd: stokker kortstokk, deler ut, setter dealer, genererer scenario etc.
+    // Setter opp en ny hånd
     function setupNewHand() {
         console.log("--- Starting setupNewHand ---");
-        // 1. Nullstill state og UI-elementer
+        // 1. Nullstill state og UI
         feedbackText.textContent = ''; feedbackText.className = '';
         correctActionText.textContent = '';
         rangeDisplayContainer.style.display = 'none'; rangeGrid.innerHTML = '';
         currentDeck = shuffleDeck(createDeck());
         heroHand = [currentDeck.pop(), currentDeck.pop()];
-        actionsPrecedingHero = []; currentPotSizeBB = 1.5; // Startpott SB+BB
-        firstActionPlayerIndex = -1; // Hvem starter handlingen (før Hero)?
-        currentScenario = 'RFI'; // Default scenario
+        actionsPrecedingHero = []; currentPotSizeBB = 1.5;
+        firstActionPlayerIndex = -1;
+        currentScenario = 'RFI';
         currentScenarioDescription = '';
-        currentHeroPositionName = ''; // Nullstill før beregning
+        currentHeroPositionName = '';
 
-        // Fjern action-markering og tekst fra alle seter
+        // Nullstill alle seter visuelt
         pokerTable.querySelectorAll('.seat').forEach(seat => {
+            updateSeatActionVisuals(seat, null);
             seat.classList.remove('action-on');
-            const actionSpan = seat.querySelector('.player-action');
-            if(actionSpan) actionSpan.textContent = '';
         });
 
-        // 2. Sett Dealerknappens posisjon (seteindeks)
+
+        // 2. Sett Dealerknappens *logiske* posisjon (seteindeks)
         if (currentTrainingMode === 'standard' || !currentFixedPosition) {
-            // Standard modus: Tilfeldig dealer
             currentDealerPositionIndex = Math.floor(Math.random() * numPlayers);
              console.log(`Standard mode: Dealer set to random seat index ${currentDealerPositionIndex}`);
         } else {
-            // Posisjonstrener: Plasser dealer slik at Hero (sete 0) får den valgte posisjonen
+            // Posisjonstrener: Plasser dealer slik at Hero (på VISUAL_HERO_SEAT_INDEX) får den valgte logiske posisjonen
              const positions = numPlayers === 9 ? positions9max : positions6max;
-             const heroTargetPos = currentFixedPosition;
+             const heroTargetPos = currentFixedPosition; // Den logiske posisjonen Hero *skal* ha
              const heroTargetPosIndexInList = positions.indexOf(heroTargetPos);
 
-             if (heroTargetPosIndexInList === -1) {
+             if (heroTargetPosIndexInList === -1) { // Fallback hvis ugyldig valg
                  console.error(`Invalid fixed position selected: ${heroTargetPos}. Falling back.`);
-                 // Fallback til en gyldig posisjon hvis noe er galt
                  currentFixedPosition = positions.includes("CO") ? "CO" : (positions.includes("BTN") ? "BTN" : positions[0]);
                  positionSelect.value = currentFixedPosition;
                  heroTargetPosIndexInList = positions.indexOf(currentFixedPosition);
              }
 
              const btnListIndex = positions.indexOf("BTN");
-
-             // Hvor mange steg er Hero sin *ønskede* posisjon forbi BTN i listen?
              const targetStepsFromBtnInList = (heroTargetPosIndexInList - btnListIndex + numPlayers) % numPlayers;
 
-             // Dealerens seteindeks må være slik at (HERO_SEAT_INDEX - dealerIndex + numPlayers) % numPlayers = targetStepsFromBtnInList
-             // La D være dealerIndex. (0 - D + N) % N = Steps => (-D + N) % N = Steps
-             // Siden (-D + N) % N er det samme som (-D) % N, og vi vil ha D positiv:
-             // Vi leter etter D slik at (0 - D) er kongruent med Steps (mod N)
-             // -D === Steps (mod N) => D === -Steps (mod N) => D === (N - Steps) % N
-             currentDealerPositionIndex = (numPlayers - targetStepsFromBtnInList) % numPlayers;
+             // Vi vil at calculatePositionName(VISUAL_HERO_SEAT_INDEX, D, numPlayers) == heroTargetPos
+             // Dette betyr at den *logiske* posisjonen til det *visuelle* hero-setet skal være heroTargetPos.
+             // Fra calculatePositionName: (btnListIndex + (VISUAL_HERO_SEAT_INDEX - D + N) % N ) % N = heroTargetPosIndexInList
+             // Vi trenger å finne D.
+             // La relativeIndex = (VISUAL_HERO_SEAT_INDEX - D + N) % N
+             // (btnListIndex + relativeIndex) % N = heroTargetPosIndexInList
+             // La `targetListDiff = (heroTargetPosIndexInList - btnListIndex + N) % N`. Dette er `targetStepsFromBtnInList`.
+             // Så `relativeIndex` må være lik `targetStepsFromBtnInList`.
+             // (VISUAL_HERO_SEAT_INDEX - D + N) % N = targetStepsFromBtnInList
+             // La S = VISUAL_HERO_SEAT_INDEX, T = targetStepsFromBtnInList
+             // (S - D + N) % N = T
+             // S - D kongruent med T (mod N)
+             // -D kongruent med T - S (mod N)
+             // D kongruent med S - T (mod N)
+             currentDealerPositionIndex = (VISUAL_HERO_SEAT_INDEX - targetStepsFromBtnInList + numPlayers) % numPlayers;
 
-             console.log(`Trainer mode: Target ${heroTargetPos}. Dealer set to seat index ${currentDealerPositionIndex} to achieve this for Hero at seat 0.`);
+             console.log(`Trainer mode: Target ${heroTargetPos}. Visual Hero Seat ${VISUAL_HERO_SEAT_INDEX}. Dealer set to seat index ${currentDealerPositionIndex}.`);
         }
 
-        // 3. Oppdater posisjonsnavn basert på dealer (dette setter også currentHeroPositionName)
+        // 3. Oppdater logiske posisjonsnavn basert på dealer (setter currentHeroPositionName)
         updatePlayerPositionsRelativeToButton();
         if (!currentHeroPositionName || currentHeroPositionName === '??') {
-             // Dette skal egentlig ikke skje etter fiksen i calculate/getActual funksjonene
              console.error("FATAL: Could not determine Hero Position after setting dealer!");
-             alert("Kritisk feil ved posisjonsberegning. Kan ikke fortsette.");
-             return; // Stopp her hvis Hero sin posisjon er ukjent
+             alert("Kritisk feil ved posisjonsberegning."); return;
         }
-         console.log(`Hero position calculated as: ${currentHeroPositionName} (Seat ${HERO_SEAT_INDEX})`);
+         console.log(`Hero's logical position is: ${currentHeroPositionName}`);
 
-
-        // 4. Generer Scenario (RFI eller vs RFI)
+        // 4. Generer Scenario (RFI eller vs RFI) - Logikk uendret
         const positions = numPlayers === 9 ? positions9max : positions6max;
-
-        // Finn blinds basert på dealer
         const sbSeatIndex = (currentDealerPositionIndex + 1) % numPlayers;
         const bbSeatIndex = (currentDealerPositionIndex + 2) % numPlayers;
         const sbPos = calculatePositionName(sbSeatIndex, currentDealerPositionIndex, numPlayers);
         const bbPos = calculatePositionName(bbSeatIndex, currentDealerPositionIndex, numPlayers);
 
-        // Legg alltid til blinds i handlingene
         actionsPrecedingHero.push({ position: sbPos, actionType: "POST_SB", amount: 0.5 });
         actionsPrecedingHero.push({ position: bbPos, actionType: "POST_BB", amount: 1 });
 
         let scenarioGenerated = false;
-        let potentialScenario = 'RFI'; // Start med RFI
+        let potentialScenario = 'RFI';
 
-        // Prøv å generere et 'vs RFI' scenario hvis ikke Hero er i tidlig posisjon eller blind
-        // Og hvis vi er i standard modus (mer variasjon) eller trener en posisjon som *kan* møte en RFI
-        const canFaceRFI = !['UTG', 'UTG+1', 'SB', 'BB'].includes(currentHeroPositionName); // Juster etter behov for 6max UTG
-        const tryVsRFI = Math.random() < 0.6; // 60% sjanse for å prøve vs RFI hvis mulig
+        const canFaceRFI = !['UTG', 'UTG+1', 'SB', 'BB'].includes(currentHeroPositionName); // Forenklet sjekk
+        const tryVsRFI = Math.random() < 0.6;
 
         if (canFaceRFI && (currentTrainingMode === 'standard' || tryVsRFI)) {
             const heroListIndex = positions.indexOf(currentHeroPositionName);
             const possibleRaiserPositions = [];
-            // Finn alle posisjoner *før* Hero (og ikke blinds) som kunne ha åpnet
             for (let i = 0; i < heroListIndex; i++) {
                  const posName = positions[i];
-                 // Kun posisjoner som har en RFI-range definert (selv om det bare er placeholder)
                  if (!['SB', 'BB'].includes(posName) && GTO_RANGES[currentStackDepth]?.[`${numPlayers}max`]?.[posName]) {
                     possibleRaiserPositions.push(posName);
                  }
             }
-
             if (possibleRaiserPositions.length > 0) {
-                // Velg en tilfeldig åpner fra de mulige
                 const raiserPosition = possibleRaiserPositions[Math.floor(Math.random() * possibleRaiserPositions.length)];
-                potentialScenario = `vs_${raiserPosition}_RFI`; // Scenario-navn
-                console.log(`Attempting to generate scenario: ${potentialScenario}`);
-
-                // Sjekk om Hero *har* en definert range for å møte dette scenarioet
+                potentialScenario = `vs_${raiserPosition}_RFI`;
+                 console.log(`Attempting to generate scenario: ${potentialScenario}`);
                 const rangeExists = GTO_RANGES[currentStackDepth]?.[`${numPlayers}max`]?.[currentHeroPositionName]?.[potentialScenario];
 
                 if (rangeExists) {
                     currentScenario = potentialScenario;
-                    // Bestem raise-størrelse (forenklet)
-                    let raiseAmount = currentStackDepth === '10bb' ? 2 : (numPlayers === 6 ? 2.5 : 3); // Standard åpning
-                    // Legg til raiserens handling
+                    let raiseAmount = currentStackDepth === '10bb' ? 2 : (numPlayers === 6 ? 2.5 : 3);
                     actionsPrecedingHero.push({ position: raiserPosition, actionType: "Raise", amount: raiseAmount });
-                    currentPotSizeBB += raiseAmount; // Øk potten
+                    currentPotSizeBB += raiseAmount;
                     currentScenarioDescription = `${raiserPosition} høyner til ${raiseAmount} BB. Din tur.`;
-
-                    // Legg til folds for alle mellom raiser og Hero
                     const raiserListIndex = positions.indexOf(raiserPosition);
                     for(let i = raiserListIndex + 1; i < heroListIndex; i++) {
                          const foldPosName = positions[i];
-                         if (!['SB', 'BB'].includes(foldPosName)) { // Ikke legg til fold for blinds som allerede har postet
+                         if (!['SB', 'BB'].includes(foldPosName)) {
                               actionsPrecedingHero.push({ position: foldPosName, actionType: "Fold" });
                          }
                     }
-                    firstActionPlayerIndex = HERO_SEAT_INDEX; // Hero er neste til å handle
+                    // Hvem handler? Det er Hero sitt *logiske* sete.
+                    firstActionPlayerIndex = getActualSeatIndex(currentHeroPositionName, currentDealerPositionIndex, numPlayers);
                     scenarioGenerated = true;
-                     console.log(`Scenario successfully set to: ${currentScenario}`);
+                     console.log(`Scenario successfully set to: ${currentScenario}. Action on seat ${firstActionPlayerIndex}`);
                  } else {
                       console.warn(`Mangler range for Hero (${currentHeroPositionName}) i scenario ${potentialScenario}. Faller tilbake til RFI.`);
-                      // Gå videre til RFI nedenfor
                  }
-            } else {
-                console.log("Ingen mulige raisere før Hero, fortsetter med RFI.");
             }
         }
 
-        // Hvis ikke et 'vs RFI' ble generert, sett opp RFI
         if (!scenarioGenerated) {
             currentScenario = 'RFI';
             currentScenarioDescription = `Det foldes til deg. Din tur.`;
              const heroListIndex = positions.indexOf(currentHeroPositionName);
-             // Finn indeksen til den første spilleren som *kunne* handlet (etter BB)
-             const firstPossibleActorListIndex = positions.indexOf('UTG'); // Eller mer robust: finn den første som ikke er SB/BB
+             const firstPossibleActorListIndex = positions.indexOf(positions.find(p => !['SB','BB'].includes(p))); // Første etter blinds
 
-             // Legg til fold for alle spillere mellom første mulige og Hero
              for (let i = firstPossibleActorListIndex; i < heroListIndex; i++) {
                   const foldPosName = positions[i];
-                  if (!['SB', 'BB'].includes(foldPosName)) { // Blinds har allerede postet
-                       actionsPrecedingHero.push({ position: foldPosName, actionType: "Fold" });
-                  }
+                   if (!['SB', 'BB'].includes(foldPosName)) {
+                        actionsPrecedingHero.push({ position: foldPosName, actionType: "Fold" });
+                   }
              }
-              firstActionPlayerIndex = HERO_SEAT_INDEX; // Hero er den første som kan handle (etter blinds)
-              console.log(`Scenario set to: ${currentScenario}`);
+              // Hvem handler? Det er Hero sitt *logiske* sete.
+              firstActionPlayerIndex = getActualSeatIndex(currentHeroPositionName, currentDealerPositionIndex, numPlayers);
+              console.log(`Scenario set to: ${currentScenario}. Action on seat ${firstActionPlayerIndex}`);
         }
 
-        // !! VIKTIG: Fjernet sjekken for `finalRangeExists` her.
-        // Hjelpefunksjonene i ranges.js håndterer nå manglende data.
 
         // 5. Oppdater resten av UI
         scenarioDescriptionElement.textContent = currentScenarioDescription;
-        updatePlayerPositionsRelativeToButton(); // Oppdater posisjonsnavn og dealer-knapp
-        displayHeroCards();
-        displayPrecedingActions(); // Vis blinds og eventuelle folds/raises før Hero
-        potDisplaySpan.textContent = currentPotSizeBB.toFixed(1); // Vis potstørrelse
-        updateActionButtons(); // Aktiver relevante knapper for Hero
+        updatePlayerPositionsRelativeToButton(); // Oppdater logiske posisjonsnavn
+        displayHeroCards(); // Vis Hero sine kort i bunnsetet
+        displayPrecedingActions(); // Vis blinds, folds, raises etc.
+        potDisplaySpan.textContent = currentPotSizeBB.toFixed(1);
+        updateActionButtons();
 
-        // 6. Vis Range i Trener-modus umiddelbart
+        // 6. Vis Range i Trener-modus
         if (currentTrainingMode === 'trainer') {
             displayRangeGridForSituation(currentStackDepth, numPlayers, currentHeroPositionName, currentScenario);
         } else {
-            rangeDisplayContainer.style.display = 'none'; // Skjul range i standard modus
+            rangeDisplayContainer.style.display = 'none';
         }
          console.log("--- setupNewHand Finished ---");
     }
 
-    // Håndterer brukerens valg av handling
-    function handleUserAction(userActionCode) {
+    function handleUserAction(userActionCode) { /* ... (uendret) ... */
          const handKey = getHandKey(heroHand);
          if (!handKey || !currentHeroPositionName || currentHeroPositionName === '??') {
               console.error("Kan ikke håndtere handling - ugyldig state", {handKey, currentHeroPositionName, heroHand});
@@ -601,13 +630,8 @@ document.addEventListener('DOMContentLoaded', () => {
               feedbackText.className = 'incorrect';
               return;
          }
-
          console.log(`Handling for: ${currentStackDepth}, ${numPlayers}max, ${currentHeroPositionName}, ${currentScenario}, Hånd: ${handKey}, BrukerValg: ${userActionCode}`);
-
-         // Bruk hjelpefunksjonen fra ranges.js som nå håndterer RFI/vs RFI struktur
          const gtoActionObject = getGtoAction(currentStackDepth, numPlayers, currentHeroPositionName, currentScenario, handKey);
-
-         // getGtoAction returnerer {"F": 1.0} hvis data mangler, så vi trenger ikke sjekke for null/tomt objekt på samme måte
          if (!gtoActionObject) {
              console.error("Klarte ikke hente GTO action objekt (uventet feil).");
              feedbackText.textContent = "Feil: Kunne ikke finne GTO data.";
@@ -615,16 +639,13 @@ document.addEventListener('DOMContentLoaded', () => {
              feedbackText.className = 'incorrect';
              return;
          }
-
-         const actions = Object.keys(gtoActionObject); // F.eks. ['3B', 'C'] eller ['F']
-         const frequencies = Object.values(gtoActionObject); // F.eks. [0.7, 0.3] eller [1.0]
+         const actions = Object.keys(gtoActionObject);
+         const frequencies = Object.values(gtoActionObject);
          let feedback = '';
-         let correctActionDescription = ''; // Endret navn for klarhet
+         let correctActionDescription = '';
          let isCorrect = false;
-         let primaryAction = 'F'; // Default til Fold
+         let primaryAction = 'F';
          let primaryFreq = 0;
-
-         // Finn den primære handlingen (den med høyest frekvens)
           if (actions.length > 0) {
                actions.forEach((act, i) => {
                    if (frequencies[i] > primaryFreq) {
@@ -633,152 +654,110 @@ document.addEventListener('DOMContentLoaded', () => {
                    }
                });
           } else {
-               // Hvis gtoActionObject var tom (bør ikke skje nå), behold Fold
                primaryAction = 'F';
-               primaryFreq = 1.0; // Anta 100% Fold hvis ingen data
-               gtoActionObject['F'] = 1.0; // Sørg for at det er data å vise
+               primaryFreq = 1.0;
+               gtoActionObject['F'] = 1.0;
                actions.push('F');
                frequencies.push(1.0);
           }
-
-
-         // Normaliser brukerens handling for å matche GTO-nøklene
          let normalizedUserAction = userActionCode;
-         // RFI: Raise-knapp (R) skal sjekkes mot GTO 'R'. 3B-knapp er deaktivert. Push (P) mot 'P'.
          if (currentScenario === 'RFI' && currentStackDepth === '10bb' && userActionCode === 'P') { normalizedUserAction = 'P'; }
          else if (currentScenario === 'RFI' && userActionCode === 'R') { normalizedUserAction = 'R'; }
-         // vs RFI: 3-Bet-knapp (3B) skal sjekkes mot GTO '3B'. Call (C) mot 'C'. Push (P) mot 'P'.
          else if (currentScenario.startsWith('vs_') && currentStackDepth === '10bb' && userActionCode === 'P') { normalizedUserAction = 'P'; }
          else if (currentScenario.startsWith('vs_') && userActionCode === '3B') { normalizedUserAction = '3B'; }
          else if (currentScenario.startsWith('vs_') && userActionCode === 'C') { normalizedUserAction = 'C'; }
-         // Fold (F) er alltid 'F'
          else if (userActionCode === 'F') { normalizedUserAction = 'F'; }
-         else {
-             console.warn(`Uventet brukerhandling '${userActionCode}' for scenario '${currentScenario}' og stack '${currentStackDepth}'. Normaliserer til '${userActionCode}'.`);
-             normalizedUserAction = userActionCode; // Behold som den er hvis ingen regel matcher
-         }
+         else { normalizedUserAction = userActionCode; }
 
-
-         // Sjekk om brukerens (normaliserte) handling finnes i GTO-objektet med >0% frekvens
          if (gtoActionObject[normalizedUserAction] && gtoActionObject[normalizedUserAction] > 0) {
              isCorrect = true;
-             // Er det den primære handlingen og har høy frekvens?
-             if (normalizedUserAction === primaryAction && gtoActionObject[normalizedUserAction] >= 0.85) { // Grense for "ren" handling
+             if (normalizedUserAction === primaryAction && gtoActionObject[normalizedUserAction] >= 0.85) {
                   feedback = "Korrekt!"; feedbackText.className = 'correct';
-             } else if (actions.length > 1) { // Korrekt, men del av en mixed strategi
-                  feedback = "OK (Mixed Strategi)"; feedbackText.className = 'correct'; // Fortsatt grønn
-             } else { // Eneste korrekte handling
+             } else if (actions.length > 1 && frequencies.filter(f => f>0).length > 1) {
+                  feedback = "OK (Mixed Strategi)"; feedbackText.className = 'correct';
+             } else {
                  feedback = "Korrekt!"; feedbackText.className = 'correct';
              }
          } else {
              feedback = "Feil!"; feedbackText.className = 'incorrect'; isCorrect = false;
          }
-
-         // Bygg beskrivelsen av GTO-anbefalingen
          correctActionDescription = "Anbefalt GTO: ";
          let actionStrings = [];
-         actions.forEach((act, i) => {
-             let percentage = (frequencies[i] * 100).toFixed(0);
-             // Vis 100% for enkeltstående handlinger
-             if (actions.length === 1) percentage = "100";
-             actionStrings.push(`${act} (${percentage}%)`);
-            });
+         Object.entries(gtoActionObject).forEach(([act, freq]) => {
+              if (freq > 0) {
+                  let percentage = (freq * 100).toFixed(0);
+                  if (actions.length === 1 || freq === 1.0) percentage = "100"; // Forenkling
+                  actionStrings.push(`${act} (${percentage}%)`);
+              }
+         });
+         if (actionStrings.length === 0) actionStrings.push("F (100%)"); // Fallback
          correctActionDescription += actionStrings.join(', ');
-         // Legg til info om primær handling hvis brukeren tok feil og det var en mix
-         if (!isCorrect && actions.length > 1) {
+         if (!isCorrect && actions.length > 1 && frequencies.filter(f=>f>0).length > 1) {
              correctActionDescription += ` (Primær: ${primaryAction})`;
-         } else if (!isCorrect && actions.length === 1 && primaryAction !== 'F') {
-             // Hvis brukeren valgte Fold feil, og eneste riktige var f.eks. Raise
-             correctActionDescription += ` (Du skulle valgt ${primaryAction})`;
+         } else if (!isCorrect && actions.length >= 1 && primaryAction !== 'F') {
+            if(gtoActionObject[primaryAction] === 1.0) correctActionDescription += ` (Du burde valgt ${primaryAction})`;
+            else correctActionDescription += ` (Primær: ${primaryAction})`;
          }
-
          feedbackText.textContent = feedback;
          correctActionText.textContent = correctActionDescription;
-
-         // Vis range grid etter handling i standard modus, eller alltid hvis feil
          if (currentTrainingMode === 'standard' || !isCorrect) {
              displayRangeGridForSituation(currentStackDepth, numPlayers, currentHeroPositionName, currentScenario);
          }
-
-         // Deaktiver knapper etter at handling er utført
          actionButtonsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
     }
 
-     // Viser GTO-rangen i et rutenett
-     function displayRangeGridForSituation(stack, players, pos, scenario) {
-         rangeGrid.innerHTML = ''; // Tøm griden
-         // Bruk hjelpefunksjonen fra ranges.js som håndterer RFI/vs RFI struktur
+     function displayRangeGridForSituation(stack, players, pos, scenario) { /* ... (uendret) ... */
+         rangeGrid.innerHTML = '';
          const fullRange = getFullRange(stack, players, pos, scenario);
-          rangeSituationInfo.textContent = `${stack} ${players}max - ${pos} - Scenario: ${scenario}`; // Mer beskrivende tittel
-
+          rangeSituationInfo.textContent = `${stack} ${players}max - ${pos} - Scenario: ${scenario}`;
           if (!fullRange || Object.keys(fullRange).length === 0) {
-              // Dette bør kun skje hvis getFullRange hadde en intern feil
               rangeGrid.innerHTML = `<p style="grid-column: span 13; text-align: center; color: red;">Kritisk feil: Kunne ikke laste range for ${pos} i scenario ${scenario} (${stack}, ${players}max).</p>`;
               rangeDisplayContainer.style.display = 'block';
               return;
           }
-
-         const ranksRev = ranks.slice().reverse(); // ['A', 'K', ..., '2']
-         ranksRev.forEach((rank1, index1) => { // index1: 0=A, 1=K...
-             ranksRev.forEach((rank2, index2) => { // index2: 0=A, 1=K...
+         const ranksRev = ranks.slice().reverse();
+         ranksRev.forEach((rank1, index1) => {
+             ranksRev.forEach((rank2, index2) => {
                  const cell = document.createElement('div');
                  cell.classList.add('range-cell');
                  let handKey;
-                 // Bestem handKey basert på om det er pair, suited eller offsuit
-                 if (index1 === index2) { handKey = rank1 + rank2; } // Pair (f.eks. AA)
-                 else if (index1 < index2) { handKey = rank1 + rank2 + 's'; } // Suited (f.eks. AKs) - index1 er høyere rank
-                 else { handKey = rank2 + rank1 + 'o'; } // Offsuit (f.eks. AKo) - index2 er høyere rank
-
-                 // Lag tekst for cellen (f.eks. AA, AKs, AKo)
+                 if (index1 === index2) { handKey = rank1 + rank2; }
+                 else if (index1 < index2) { handKey = rank1 + rank2 + 's'; }
+                 else { handKey = rank2 + rank1 + 'o'; }
                  let displayText = '';
                  let displayRank1 = rank1 === 'T' ? '10' : rank1;
                  let displayRank2 = rank2 === 'T' ? '10' : rank2;
-                 if (index1 === index2) { displayText = displayRank1 + displayRank2; } // AA, KK
-                 else if (index1 < index2) { displayText = displayRank1 + displayRank2; } // AK, AQ...
-                 else { displayText = displayRank2 + displayRank1; } // KA -> AK, QA -> AQ...
+                 if (index1 === index2) { displayText = displayRank1 + displayRank2; }
+                 else if (index1 < index2) { displayText = displayRank1 + displayRank2; }
+                 else { displayText = displayRank2 + displayRank1; }
                  cell.textContent = displayText;
-
-                 // Hent GTO-handling (default til Fold hvis den mangler i fullRange, selv om det ikke bør skje)
                  const gtoAction = fullRange[handKey] || { "F": 1.0 };
                  const actions = Object.keys(gtoAction);
                  const frequencies = Object.values(gtoAction);
                  let tooltipText = `${handKey}:\n`;
-                 let primaryAction = 'F'; // Default
+                 let primaryAction = 'F';
                  let isMixed = false;
                  let primaryFreq = 0;
-
-                 // Finn primær handling og sjekk om det er mixed
                   if (actions.length > 0) {
                       actions.forEach((act, i) => { if (frequencies[i] > primaryFreq) { primaryFreq = frequencies[i]; primaryAction = act; } });
-                       if(actions.length > 1) {
-                           // Hvis det er mer enn én handling med >0% frekvens, er den mixed
-                           isMixed = frequencies.filter(f => f > 0).length > 1;
-                       }
+                      isMixed = frequencies.filter(f => f > 0).length > 1;
                   } else {
-                       // Sikkerhetsnett hvis gtoAction var tom
                        primaryAction = 'F';
-                       gtoAction['F'] = 1.0; // Sørg for at F vises i tooltip
+                       gtoAction['F'] = 1.0;
                   }
-
-
-                 // Bygg tooltip-tekst
                  let actionStrings = [];
                  Object.entries(gtoAction).forEach(([act, freq]) => {
-                     if (freq > 0) { // Vis kun handlinger med > 0%
+                     if (freq > 0) {
                          actionStrings.push(`${act}: ${(freq * 100).toFixed(0)}%`);
                      }
                  });
-                 if (actionStrings.length === 0) actionStrings.push("F: 100%"); // Fallback
+                 if (actionStrings.length === 0) actionStrings.push("F: 100%");
                  tooltipText += actionStrings.join('\n');
 
-
-                  // Sett bakgrunnsfarge basert på primær handling/mix
                   if (isMixed) { cell.classList.add('range-mixed'); }
-                  else if (['R', '3B', 'P'].includes(primaryAction)) { cell.classList.add('range-raise'); } // Grønn for raise/3bet/push
-                  else if (primaryAction === 'C') { cell.classList.add('range-call'); } // Blå for call
-                  else { cell.classList.add('range-fold'); } // Rød for fold (eller default)
-
-                 // Legg til tooltip
+                  else if (['R', '3B', 'P'].includes(primaryAction)) { cell.classList.add('range-raise'); }
+                  else if (primaryAction === 'C') { cell.classList.add('range-call'); }
+                  else { cell.classList.add('range-fold'); }
                  const tooltipSpan = document.createElement('span');
                  tooltipSpan.classList.add('tooltiptext');
                  tooltipSpan.textContent = tooltipText;
@@ -786,62 +765,60 @@ document.addEventListener('DOMContentLoaded', () => {
                  rangeGrid.appendChild(cell);
              });
          });
-           rangeDisplayContainer.style.display = 'block'; // Vis range-containeren
+           rangeDisplayContainer.style.display = 'block';
      }
 
 
     // --- Event Listeners ---
     gameTypeSelect.addEventListener('change', (e) => {
-        numPlayers = parseInt(e.target.value.slice(0,1)); // Hent 9 eller 6
-        setupTableUI(); // Bygg bordet på nytt
-        populatePositionSelect(); // Oppdater posisjonsvelger
-        setupNewHand(); // Start ny hånd med nye innstillinger
+        numPlayers = parseInt(e.target.value.slice(0,1));
+        calculateVisualHeroSeatIndex(); // Oppdater Hero sin visuelle plass
+        setupTableUI();
+        populatePositionSelect();
+        setupNewHand();
     });
 
-    stackDepthSelect.addEventListener('change', (e) => {
+    stackDepthSelect.addEventListener('change', (e) => { /* ... (uendret) ... */
         currentStackDepth = e.target.value;
         setupNewHand();
     });
 
-    trainingModeSelect.addEventListener('change', (e) => {
+    trainingModeSelect.addEventListener('change', (e) => { /* ... (uendret) ... */
         currentTrainingMode = e.target.value;
         if (currentTrainingMode === 'trainer') {
             positionLabel.style.display = 'inline';
             positionSelect.style.display = 'inline';
-            populatePositionSelect(); // Sørg for at den er fylt
-            currentFixedPosition = positionSelect.value; // Sett valgt posisjon
+            populatePositionSelect();
+            currentFixedPosition = positionSelect.value;
         } else {
             positionLabel.style.display = 'none';
             positionSelect.style.display = 'none';
-            currentFixedPosition = null; // Ingen fast posisjon i standard modus
+            currentFixedPosition = null;
         }
-        setupNewHand(); // Start ny hånd med ny modus
+        setupNewHand();
     });
 
-     positionSelect.addEventListener('change', (e) => {
+     positionSelect.addEventListener('change', (e) => { /* ... (uendret) ... */
           if (currentTrainingMode === 'trainer') {
                currentFixedPosition = e.target.value;
-               setupNewHand(); // Start ny hånd for den valgte posisjonen
+               setupNewHand();
           }
      });
 
     newHandBtn.addEventListener('click', setupNewHand);
 
-    // Legg til én listener på containeren for handlingsknappene (Event Delegation)
-    actionButtonsContainer.addEventListener('click', (e) => {
-        // Sjekk om det var en knapp som ble klikket og at den ikke er deaktivert
+    actionButtonsContainer.addEventListener('click', (e) => { /* ... (uendret) ... */
         if (e.target.tagName === 'BUTTON' && !e.target.disabled) {
-             // Deaktiver alle knapper umiddelbart for å unngå doble klikk
              actionButtonsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
-             // Håndter handlingen
              handleUserAction(e.target.dataset.action);
         }
     });
 
     // --- Initialisering ---
-    console.log("Initializing Poker Trainer...");
-    setupTableUI(); // Bygg det initielle bordet
-    populatePositionSelect(); // Fyll posisjonsvelgeren
-    setupNewHand(); // Sett opp den første hånden
+    console.log("Initializing Poker Trainer V2...");
+    calculateVisualHeroSeatIndex(); // Sett initiell Hero-plass
+    setupTableUI();
+    populatePositionSelect();
+    setupNewHand();
     console.log("Initialization complete.");
 });
