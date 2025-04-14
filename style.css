@@ -23,48 +23,18 @@ h3 {
     color: #444;
 }
 
-.controls {
-    margin-bottom: 20px;
-    background-color: #fff;
-    padding: 15px 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px 15px; /* Justert gap */
-    align-items: center;
-    justify-content: center;
-    width: 90%;
-    max-width: 900px; /* Økt litt for delay input */
+.controls { /* ... (uendret) ... */
+    margin-bottom: 20px; background-color: #fff; padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex; flex-wrap: wrap; gap: 10px 15px; align-items: center; justify-content: center; width: 90%; max-width: 900px;
 }
-
-.controls label {
-    margin-right: 5px;
-    font-weight: 500;
-}
-.controls select, .controls input, .controls button {
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 14px;
-    vertical-align: middle; /* Juster vertikal alignment */
-}
-.controls input[type="number"] {
-    width: 50px; /* Fast bredde for nummerinput */
-}
-.controls button {
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
-    border: none;
-    transition: background-color 0.2s ease;
-}
-.controls button:hover {
-    background-color: #0056b3;
-}
+.controls label { margin-right: 5px; font-weight: 500; }
+.controls select, .controls input, .controls button { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; vertical-align: middle; }
+.controls input[type="number"] { width: 50px; }
+.controls button { background-color: #007bff; color: white; cursor: pointer; border: none; transition: background-color 0.2s ease; }
+.controls button:hover { background-color: #0056b3; }
 
 .table-container {
-    margin-bottom: 20px; /* Redusert litt */
+    margin-bottom: 35px; /* ØKT MARGIN for å gi plass til hero-controls */
     position: relative;
     width: 90%;
     max-width: 750px;
@@ -72,70 +42,42 @@ h3 {
     min-height: 350px;
 }
 
-.poker-table {
-    width: 100%;
-    height: 100%;
-    background-color: #2e7d32;
-    border-radius: 50% / 50%;
-    border: 15px solid #8d6e63;
-    position: absolute;
-    top: 0;
-    left: 0;
-    box-shadow: inset 0 0 25px rgba(0,0,0,0.4), 0 6px 18px rgba(0,0,0,0.3);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.poker-table { /* ... (uendret) ... */
+    width: 100%; height: 100%; background-color: #2e7d32; border-radius: 50% / 50%; border: 15px solid #8d6e63;
+    position: absolute; top: 0; left: 0; box-shadow: inset 0 0 25px rgba(0,0,0,0.4), 0 6px 18px rgba(0,0,0,0.3);
+    display: flex; justify-content: center; align-items: center;
 }
 
-.seat {
-    position: absolute;
-    width: 85px; /* Økt bredde for å passe bedre */
-    height: 105px;/* Økt høyde */
-    background-color: #f8f9fa;
-    border: 1px solid #adb5bd;
-    border-radius: 5px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0;
-    box-sizing: border-box;
-    font-size: 10px;
-    text-align: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-    transform: translate(-50%, -50%);
-    transition: background-color 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
-    overflow: hidden; /* Skjul kort som går utenfor (unntatt Hero) */
+.seat { /* ... (uendret) ... */
+    position: absolute; width: 85px; height: 105px; background-color: #f8f9fa; border: 1px solid #adb5bd; border-radius: 5px;
+    display: flex; justify-content: center; align-items: center; padding: 0; box-sizing: border-box; font-size: 10px; text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15); transform: translate(-50%, -50%);
+    transition: background-color 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease; overflow: hidden;
 }
 .seat.hero-seat {
     border: 3px solid #ffc107;
     background-color: #fffde7;
-    width: auto; /* Bredde styres av innhold */
-    height: auto; /* Høyde styres av innhold */
-    min-width: 150px; /* Minimumsbredde for Hero */
-    overflow: visible; /* Tillat at kort stikker ut */
-    padding: 8px; /* Økt padding for Hero-setet */
+    /* width: auto; Fjernet - bruker min-width */
+    /* height: auto; Fjernet - bruker min-height */
+    min-width: 160px; /* Sørger for nok bredde for kort */
+    min-height: 120px; /* Sørger for nok høyde */
+    overflow: visible;
+    padding: 0; /* Padding styres av .seat-content nå */
     z-index: 5;
-    /* Sentrering håndteres av transform */
+    /* Sentrering håndteres av transform + left: 50% fra JS */
 }
-.seat.action-on {
-     box-shadow: 0 0 12px 4px #ffc107;
-     border-color: #ffa000;
+.seat.action-on { /* ... (uendret) ... */
+     box-shadow: 0 0 12px 4px #ffc107; border-color: #ffa000;
 }
 
-.seat-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    height: 100%;
-    padding: 5px;
-    box-sizing: border-box;
+.seat-content { /* ... (uendret) ... */
+    display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+    width: 100%; height: 100%; padding: 5px; box-sizing: border-box;
 }
 .hero-seat .seat-content {
-    padding: 0;
+    padding: 8px; /* Padding inni hero-seat for innholdet */
     justify-content: center;
-    /* Ingen fast høyde, la innholdet bestemme */
+    min-height: 120px; /* Matcher setets min-høyde */
 }
 
 
@@ -146,95 +88,71 @@ h3 {
 .seat.seat-posted-blind { }
 
 
-.player-info {
-     margin-bottom: 4px;
-     width: 100%;
-     flex-shrink: 0;
+.player-info { /* ... (uendret) ... */
+     margin-bottom: 4px; width: 100%; flex-shrink: 0;
 }
-.hero-seat .player-info { display: none; } /* Skjul navn/pos for Hero i setet */
-
+.hero-seat .player-info { display: none; }
 .player-name { font-weight: bold; font-size: 11px; margin-bottom: 1px; white-space: nowrap; }
 .player-position { font-style: italic; font-size: 10px; color: #555; }
-.player-action {
-    padding: 3px 0; font-size: 11px; font-weight: bold; width: 100%;
-    line-height: 1.2; color: #333; min-height: 1.2em; flex-shrink: 0;
+.player-action { /* ... (uendret) ... */
+    padding: 3px 0; font-size: 11px; font-weight: bold; width: 100%; line-height: 1.2; color: #333; min-height: 1.2em; flex-shrink: 0;
 }
-.hero-seat .player-action { display: none; } /* Skjul action-tekst i Hero-setet */
+.hero-seat .player-action { display: none; }
 
 /* Farger for handlingstekst */
-.player-action.action-fold { color: #dc3545; }
-.player-action.action-call { color: #007bff; }
+.player-action.action-fold { color: #dc3545; } .player-action.action-call { color: #007bff; }
 .player-action.action-raise, .player-action.action-3bet, .player-action.action-push { color: #28a745; }
 .player-action.action-post { color: #6c757d; }
 
 
-.player-cards {
-    display: flex; justify-content: center; align-items: center;
-    gap: 3px; width: 100%; min-height: 55px;
+.player-cards { /* ... (uendret) ... */
+    display: flex; justify-content: center; align-items: center; gap: 3px; width: 100%; min-height: 55px;
 }
-.hero-seat .player-cards { min-height: initial; margin: 0; /* Fjerner margin */ }
+.hero-seat .player-cards { min-height: initial; margin: 0; }
 
 
 /* --- Styling for MOTSTANDER kort-placeholders --- */
-.player-cards .card {
-    width: 38px; height: 55px; border: 1px solid #adb5bd; border-radius: 4px;
-    background-color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.15);
-    display: flex; justify-content: center; align-items: center;
-    font-weight: bold; position: relative; box-sizing: border-box;
-    padding: 2px; margin: 0; transition: background-color 0.3s ease, border-color 0.3s ease;
-    overflow: hidden; /* Skjul innhold som '?' */
+.player-cards .card { /* ... (uendret) ... */
+    width: 38px; height: 55px; border: 1px solid #adb5bd; border-radius: 4px; background-color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    display: flex; justify-content: center; align-items: center; font-weight: bold; position: relative; box-sizing: border-box; padding: 2px; margin: 0;
+    transition: background-color 0.3s ease, border-color 0.3s ease; overflow: hidden;
 }
-.player-cards .card.card-placeholder {
-    font-size: 22px; color: #ccc;
-}
+.player-cards .card.card-placeholder { font-size: 22px; color: #ccc; }
 .player-cards .card.card-placeholder::before { content: '?'; }
-
 /* Farger for placeholder-BAKGRUNN basert på action */
 .player-cards .card-folded { background-color: #ffcdd2; border-color: #e57373; }
 .player-cards .card-called { background-color: #bbdefb; border-color: #64b5f6; }
 .player-cards .card-raised { background-color: #c8e6c9; border-color: #81c784; }
 .player-cards .card-3bet { background-color: #fff9c4; border-color: #fff176; }
 .player-cards .card-pushed { background-color: #b2ebf2; border-color: #4dd0e1; }
-
 /* Skjul '?' for fargede kort */
-.player-cards .card-folded::before,
-.player-cards .card-called::before,
-.player-cards .card-raised::before,
-.player-cards .card-3bet::before,
-.player-cards .card-pushed::before { content: ''; }
+.player-cards .card-folded::before, .player-cards .card-called::before, .player-cards .card-raised::before,
+.player-cards .card-3bet::before, .player-cards .card-pushed::before { content: ''; }
 
 
 /* --- Styling for HERO sine (faktiske) kort --- */
-.hero-seat .player-cards .card {
-    width: 70px; /* Økt */
-    height: 105px; /* Økt */
-    border-radius: 6px; padding: 5px; margin: 0 5px; background-color: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2); justify-content: space-between; align-items: center;
-    overflow: visible; /* Vis rank/suit */
+.hero-seat .player-cards .card { /* ... (uendret) ... */
+    width: 70px; height: 105px; border-radius: 6px; padding: 5px; margin: 0 5px; background-color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); justify-content: space-between; align-items: center; overflow: visible;
 }
-.hero-seat .player-cards .card.card-placeholder { /* Fallback */
-    justify-content: center; font-size: 40px; color: #ccc;
-}
+.hero-seat .player-cards .card.card-placeholder { justify-content: center; font-size: 40px; color: #ccc; }
 .hero-seat .player-cards .card.card-placeholder::before { content: '?'; }
-
-.hero-seat .player-cards .card-rank { position: absolute; font-size: 20px; line-height: 1; } /* Økt */
-.hero-seat .player-cards .card-suit { font-size: 18px; } /* Økt */
+.hero-seat .player-cards .card-rank { position: absolute; font-size: 20px; line-height: 1; }
+.hero-seat .player-cards .card-suit { font-size: 18px; }
 .hero-seat .player-cards .card-top-left { top: 6px; left: 6px; text-align: center;}
 .hero-seat .player-cards .card-bottom-right { bottom: 6px; right: 6px; text-align: center; transform: rotate(180deg);}
-.hero-seat .player-cards .card-suit-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 44px; } /* Økt */
-
-.spades, .clubs { color: black; }
-.hearts, .diamonds { color: red; }
+.hero-seat .player-cards .card-suit-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 44px; }
+.spades, .clubs { color: black; } .hearts, .diamonds { color: red; }
 
 
 .dealer-button { /* ... (uendret) ... */
-    position: absolute; width: 30px; height: 30px; background: radial-gradient(circle, #ffffff 60%, #e0e0e0 100%);
-    color: #424242; border: 2px solid #757575; border-radius: 50%; display: flex; justify-content: center;
-    align-items: center; font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); z-index: 10;
+    position: absolute; width: 30px; height: 30px; background: radial-gradient(circle, #ffffff 60%, #e0e0e0 100%); color: #424242;
+    border: 2px solid #757575; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold;
+    font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); z-index: 10;
 }
 .pot-display { /* ... (uendret) ... */
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0, 0, 0, 0.65);
-    color: white; padding: 8px 14px; border-radius: 5px; font-size: 16px; font-weight: 500; z-index: 5; border: 1px solid rgba(255, 255, 255, 0.2);
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0, 0, 0, 0.65); color: white;
+    padding: 8px 14px; border-radius: 5px; font-size: 16px; font-weight: 500; z-index: 5; border: 1px solid rgba(255, 255, 255, 0.2);
 }
 .scenario-desc { /* ... (uendret) ... */
      position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-style: italic; color: #fff; font-size: 14px;
@@ -242,7 +160,9 @@ h3 {
 }
 
 /* Hero Controls Area */
-.hero-controls { text-align: center; margin-bottom: 20px; margin-top: 10px; width: 100%; }
+.hero-controls { /* ... (uendret) ... */
+    text-align: center; margin-bottom: 20px; margin-top: 10px; width: 100%;
+}
 .hero-controls h2 { margin-bottom: 15px; font-size: 1.4em; }
 #heroPosition { font-weight: bold; color: #d32f2f; }
 
@@ -277,7 +197,6 @@ h3 {
 }
 #rangeDisplayContainer h3 { margin-top: 0; margin-bottom: 12px; font-size: 16px; text-align: center; }
 #rangeSituationInfo { font-weight: normal; font-style: italic; }
-
 #rangeGrid { /* ... (uendret) ... */
     display: grid; grid-template-columns: repeat(13, 36px); grid-template-rows: repeat(13, 36px); gap: 1px;
     border: 1px solid #dee2e6; margin-bottom: 10px; background-color: #dee2e6;
@@ -298,5 +217,7 @@ h3 {
 }
 .range-cell:hover .tooltiptext { visibility: visible; opacity: 0.95; transition: opacity 0.3s ease; }
 .legend { margin-top: 10px; text-align: center; font-size: 12px; }
-.legend span { display: inline-block; padding: 4px 10px; margin: 3px 5px; border-radius: 4px; color: #424242; border: 1px solid #bdbdbd; font-weight: 500; }
+.legend span { /* ... (uendret) ... */
+    display: inline-block; padding: 4px 10px; margin: 3px 5px; border-radius: 4px; color: #424242; border: 1px solid #bdbdbd; font-weight: 500;
+}
 .legend-raise { background-color: #c8e6c9; } .legend-call { background-color: #bbdefb; } .legend-fold { background-color: #ffcdd2; } .legend-mixed { background-color: #fff9c4; }
