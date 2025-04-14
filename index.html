@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poker Pre-flop Trainer V1</title>
+    <title>Poker Pre-flop Trainer V2.1</title> <!-- Oppdatert tittel -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Poker Pre-flop GTO Trainer V1</h1>
+    <h1>Poker Pre-flop GTO Trainer V2.1</h1> <!-- Oppdatert tittel -->
 
     <div class="controls">
         <label for="gameType">Bord:</label>
@@ -40,27 +40,23 @@
         <div class="poker-table">
             <!-- Seter legges til dynamisk av JS -->
             <div class="pot-display">Pot: <span>1.5</span> BB</div>
-             <div class="dealer-button">D</div>
+            <div id="scenarioDescription" class="scenario-desc"></div>
+            <div class="dealer-button">D</div>
         </div>
-         <div id="scenarioDescription" class="scenario-desc"></div>
     </div>
 
-
-    <div class="hero-area">
-        <h2>Din Hånd (<span id="heroPosition">--</span>)</h2>
-        <div class="hero-cards">
-            <div class="card card-placeholder"></div>
-            <div class="card card-placeholder"></div>
-        </div>
-        <div class="action-buttons">
-            <!-- Knapper deaktiveres/aktiveres av JS basert på scenario -->
-            <button data-action="F">Fold</button>
-            <button data-action="C">Call</button>
-            <button data-action="R">Raise</button>
-            <button data-action="3B">3-Bet</button>
+    <!-- Hero Info og Handling -->
+    <div class="hero-controls">
+         <!-- Viser Hero sin *logiske* posisjon for denne hånden -->
+         <h2>Din Tur (<span id="heroPosition">--</span>)</h2>
+         <div class="action-buttons">
+             <button data-action="F">Fold</button>
+             <button data-action="C">Call</button>
+             <button data-action="R">Raise</button>
+             <button data-action="3B">3-Bet</button>
              <button data-action="P">Push (All-in)</button>
-        </div>
-    </div>
+         </div>
+     </div>
 
     <div class="feedback-area">
         <p id="feedbackText"></p>
