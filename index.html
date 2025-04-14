@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poker Pre-flop Trainer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Poker Pre-flop GTO Trainer</h1>
+
+    <div class="controls">
+        <label for="gameType">Bordstørrelse:</label>
+        <select id="gameType">
+            <option value="9max" selected>9-max</option>
+            <option value="6max">6-max</option>
+        </select>
+
+        <label for="stackDepth">Stackdybde (BB):</label>
+        <select id="stackDepth">
+            <option value="40bb" selected>40 BB</option>
+            <option value="10bb">10 BB</option>
+        </select>
+
+        <label for="trainingMode">Modus:</label>
+        <select id="trainingMode">
+            <option value="standard" selected>Standard (Feedback Etterpå)</option>
+            <option value="trainer">Posisjonstrener (Vis Range Først)</option>
+        </label>
+
+        <label for="positionSelect" id="positionLabel" style="display: none;">Velg Posisjon:</label>
+        <select id="positionSelect" style="display: none;">
+            <!-- Options fylles dynamisk av JS -->
+        </select>
+
+         <button id="newHandBtn">Ny Hånd</button>
+    </div>
+
+    <div class="table-container">
+        <div class="poker-table">
+            <!-- Seter legges til dynamisk av JS -->
+            <div class="community-cards">
+                 <!-- Ingen community cards pre-flop -->
+            </div>
+             <div class="pot-display">Pot: <span>0</span> BB</div>
+             <div class="dealer-button">D</div>
+        </div>
+    </div>
+
+    <div class="hero-area">
+        <h2>Din Hånd (<span id="heroPosition"></span>)</h2>
+        <div class="hero-cards">
+            <div class="card card-placeholder"></div>
+            <div class="card card-placeholder"></div>
+        </div>
+        <div class="action-buttons">
+            <button data-action="F">Fold</button>
+            <button data-action="C">Call</button> <!-- Må differensiere call RFI vs call 3bet etc. i logikk -->
+            <button data-action="R">Raise</button> <!-- Må differensiere RFI vs 3bet etc. i logikk -->
+        </div>
+    </div>
+
+    <div class="feedback-area">
+        <p id="feedbackText"></p>
+        <p id="correctActionText"></p>
+        <div id="rangeDisplayContainer" style="display: none;">
+            <h3>Anbefalt Range for Situasjonen:</h3>
+            <div id="rangeGrid">
+                <!-- Range grid genereres av JS -->
+            </div>
+            <div class="legend">
+                <span class="legend-raise">Raise/3Bet/Push</span>
+                <span class="legend-call">Call</span>
+                <span class="legend-fold">Fold</span>
+                <span class="legend-mixed">Mixed</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="ranges.js"></script> <!-- Ranges defineres her -->
+    <script src="script.js"></script>
+</body>
+</html>
