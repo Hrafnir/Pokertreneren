@@ -1,4 +1,4 @@
-// script.js (Versjon 3 - Mer robust state/scenario-håndtering)
+// script.js (Versjon 4 - Rettet "getPositionName is not defined"-feil)
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Globale Variabler & Tilstand ---
@@ -6,8 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let heroHand = [];
     let currentHeroPositionName = '';
     let currentDealerPositionIndex = -1;
-    let currentScenario = 'RFI'; // Starter alltid med RFI som fallback
-    let currentScenarioDescription = ''; // For UI
+    let currentScenario = 'RFI';
+    let currentScenarioDescription = '';
     let actionsPrecedingHero = [];
     let numPlayers = 9;
     let currentStackDepth = '40bb';
@@ -83,22 +83,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // Kalkulerer posisjonsnavn basert på seteindeks og knappindeks
     function calculatePositionName(seatIndex, dealerIndex, numPlayers) {
         const positions = numPlayers === 9 ? positions9max : positions6max;
+        if (dealerIndex < 0 || !positions) return "??"; // Sikkerhetssjekk
+
         const relativeIndex = (seatIndex - dealerIndex + numPlayers) % numPlayers;
 
-        // Juster for å matche standard rekkefølge (BTN er nest sist i array)
-        const btnListIndex = positions.indexOf("BTN");
-        const adjustedListIndex = (relativeIndex + btnListIndex + 1) % numPlayers;
+        // Juster for å matche standard rekkefølge (BTN er nest sist i array før SB/BB)
+        let btnListIndex;
+        if (numPlayers === 9) btnListIndex = 6; // BTN er index 6 i positions9max
+        else btnListIndex = 3; // BTN er index 3 i positions6max
 
-        return positions[adjustedListIndex] || "??";
+        const adjustedListIndex = (relativeIndex + btnListIndex) % numPlayers;
+
+        return positions[adjustedListIndex] || "??"; // Returner navn
     }
 
      // Finner setets indeks gitt posisjonsnavn
      function getActualSeatIndex(positionName, dealerIndex, numPlayers) {
+         if (dealerIndex < 0) return -1;
          const positions = numPlayers === 9 ? positions9max : positions6max;
          const listIndex = positions.indexOf(positionName);
          if (listIndex === -1) return -1;
 
-          // Juster basert på knappens posisjon i listene
           const btnListIndex = positions.indexOf("BTN");
           // Hvor mange steg fra BTN (i listen) er posisjonen vi leter etter?
           const stepsFromBtn = (listIndex - btnListIndex + numPlayers) % numPlayers;
@@ -111,7 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function populatePositionSelect() {
         const positions = numPlayers === 9 ? positions9max : positions6max;
         positionSelect.innerHTML = '';
-        // Ikke inkluder blinds i trener-modus for enkelhets skyld i V1?
         const trainablePositions = positions.filter(p => !['SB', 'BB'].includes(p));
         trainablePositions.forEach(pos => {
             const option = document.createElement('option');
@@ -123,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentFixedPosition = positionSelect.value;
     }
 
-    function getSeatPosition(seatIndex, totalPlayers) { /* ... (samme som før) ... */
+    function getSeatPosition(seatIndex, totalPlayers) {
          const angleOffset = -90;
          const angleIncrement = 360 / totalPlayers;
          const angle = angleOffset + seatIndex * angleIncrement;
@@ -135,18 +139,23 @@ document.addEventListener('DOMContentLoaded', () => {
          return { top: `${top}%`, left: `${left}%` };
     }
 
-     function getButtonPosition(dealerSeatElement) { /* ... (samme som før) ... */
+     function getButtonPosition(dealerSeatElement) {
         if (!dealerSeatElement) return { top: '50%', left: '50%' };
         const seatTop = dealerSeatElement.offsetTop;
         const seatLeft = dealerSeatElement.offsetLeft;
         const seatHeight = dealerSeatElement.offsetHeight;
         const seatWidth = dealerSeatElement.offsetWidth;
         const top = seatTop + seatHeight / 2 - dealerButtonElement.offsetHeight / 2;
-        const left = seatLeft + seatWidth + 5;
+        // Juster knappens horisontale posisjon basert på setets side
+        let left = seatLeft + seatWidth + 5; // Default til høyre
+         if (seatLeft > pokerTable.offsetWidth / 2) { // Hvis setet er på høyre side
+              left = seatLeft - dealerButtonElement.offsetWidth - 5; // Plasser til venstre
+         }
+
         return { top: `${top}px`, left: `${left}px` };
      }
 
-    function setupTableUI() { /* ... (samme som før) ... */
+    function setupTableUI() {
         pokerTable.innerHTML = '';
         pokerTable.appendChild(dealerButtonElement);
         pokerTable.appendChild(potDisplaySpan.parentNode);
@@ -166,37 +175,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // MER ROBUST versjon
     function updatePlayerPositionsRelativeToButton() {
-        if (currentDealerPositionIndex < 0) return;
+        if (currentDealerPositionIndex < 0) {
+            console.error("Dealer position not set");
+            return;
+        };
 
         const seats = pokerTable.querySelectorAll('.seat');
-        let heroActualPosition = "??"; // Midlertidig variabel
+        let heroActualPosition = "??";
 
         seats.forEach((seat) => {
             const actualIndex = parseInt(seat.dataset.seatId);
-            const positionName = calculatePositionName(actualIndex, currentDealerPositionIndex, numPlayers); // Bruk kalkulasjonsfunksjon
+            const positionName = calculatePositionName(actualIndex, currentDealerPositionIndex, numPlayers); // BRUK KORRIGERT FUNKSJON
 
             const positionSpan = seat.querySelector('.player-position');
             if (positionSpan) {
                 positionSpan.textContent = positionName;
             }
             const actionSpan = seat.querySelector('.player-action');
-            if(actionSpan) actionSpan.textContent = ''; // Nullstill handling ved repoosisjonering
+            if(actionSpan) actionSpan.textContent = '';
             seat.classList.remove('hero-seat', 'action-on');
 
             if (actualIndex === HERO_SEAT_INDEX) {
                 seat.classList.add('hero-seat');
-                heroActualPosition = positionName; // Sett posisjonen funnet for Hero
+                heroActualPosition = positionName;
             }
         });
 
-         // Oppdater global state ETTER løkken er ferdig
-         currentHeroPositionName = heroActualPosition;
+         currentHeroPositionName = heroActualPosition; // Oppdater global state
          heroPositionSpan.textContent = currentHeroPositionName;
 
 
-        // Plasser dealer button
         const dealerSeatElement = pokerTable.querySelector(`.seat[data-seat-id="${currentDealerPositionIndex}"]`);
         if(dealerSeatElement) {
             const btnPos = getButtonPosition(dealerSeatElement);
@@ -204,12 +213,10 @@ document.addEventListener('DOMContentLoaded', () => {
             dealerButtonElement.style.left = btnPos.left;
         }
 
-         // Merk hvem som har handlingen (første etter BB som ikke har handlet)
           if (firstActionPlayerIndex !== -1) {
                const actionSeat = pokerTable.querySelector(`.seat[data-seat-id="${firstActionPlayerIndex}"]`);
                if (actionSeat) actionSeat.classList.add('action-on');
           } else if (HERO_SEAT_INDEX !== -1 && currentHeroPositionName !== '??') {
-                // Hvis ingen handling før, og det er Hero sin tur
                 const heroSeatElement = pokerTable.querySelector(`.seat[data-seat-id="${HERO_SEAT_INDEX}"]`);
                 if(heroSeatElement) heroSeatElement.classList.add('action-on');
           }
@@ -259,21 +266,22 @@ document.addEventListener('DOMContentLoaded', () => {
          }
     }
 
-    function displayPrecedingActions() { /* ... (samme som før) ... */
+    function displayPrecedingActions() {
         const seats = pokerTable.querySelectorAll('.seat');
-        seats.forEach(seat => { // Sørg for å nullstille alle først
+        seats.forEach(seat => {
              const actionSpan = seat.querySelector('.player-action');
              if (actionSpan) actionSpan.textContent = '';
-             if (seat.dataset.seatId == HERO_SEAT_INDEX) { // Fjern action-on fra hero når actions vises
+             if (parseInt(seat.dataset.seatId) === HERO_SEAT_INDEX) {
                  seat.classList.remove('action-on');
              }
         });
 
         actionsPrecedingHero.forEach(actionInfo => {
+             // BRUK KORRIGERT FUNKSJON her også
              const seatIndex = getActualSeatIndex(actionInfo.position, currentDealerPositionIndex, numPlayers);
              if (seatIndex === -1) {
-                 console.warn(`Could not find seat index for position ${actionInfo.position}`);
-                 return; // Hopp over hvis posisjon ikke finnes
+                 console.warn(`Could not find seat index for position ${actionInfo.position} in displayPrecedingActions`);
+                 return;
              }
              const seatElement = pokerTable.querySelector(`.seat[data-seat-id="${seatIndex}"]`);
              if (seatElement) {
@@ -290,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
                          default: actionText = actionInfo.actionType;
                      }
                      actionSpan.textContent = actionText;
-                     actionSpan.className = 'player-action'; // Reset
+                     actionSpan.className = 'player-action';
                      if (actionClass) actionSpan.classList.add(actionClass);
                  }
              }
@@ -315,75 +323,74 @@ document.addEventListener('DOMContentLoaded', () => {
                  actionButtonsContainer.querySelector('[data-action="P"]').disabled = false;
              }
          }
-         // Flere scenarioer vil kreve mer logikk her
      }
 
     // MER ROBUST setupNewHand
     function setupNewHand() {
-        // 1. Nullstill alt FØRST
-        feedbackText.textContent = '';
-        feedbackText.className = ''; // Nullstill farge
+        console.log("--- Starting setupNewHand ---"); // Debug log
+        // 1. Nullstill state
+        feedbackText.textContent = ''; feedbackText.className = '';
         correctActionText.textContent = '';
-        rangeDisplayContainer.style.display = 'none';
-        rangeGrid.innerHTML = '';
+        rangeDisplayContainer.style.display = 'none'; rangeGrid.innerHTML = '';
         currentDeck = shuffleDeck(createDeck());
         heroHand = [currentDeck.pop(), currentDeck.pop()];
-        actionsPrecedingHero = [];
-        currentPotSizeBB = 1.5;
-        firstActionPlayerIndex = -1;
-        currentScenario = 'RFI'; // Default scenario
-        currentScenarioDescription = '';
-        currentHeroPositionName = ''; // Nullstill
+        actionsPrecedingHero = []; currentPotSizeBB = 1.5;
+        firstActionPlayerIndex = -1; currentScenario = 'RFI';
+        currentScenarioDescription = ''; currentHeroPositionName = '';
 
-         // Fjern all action-styling fra seter
-         pokerTable.querySelectorAll('.seat').forEach(seat => {
-             seat.classList.remove('action-on');
-             const actionSpan = seat.querySelector('.player-action');
-             if(actionSpan) actionSpan.textContent = '';
-         });
+        pokerTable.querySelectorAll('.seat').forEach(seat => {
+            seat.classList.remove('action-on');
+            const actionSpan = seat.querySelector('.player-action');
+            if(actionSpan) actionSpan.textContent = '';
+        });
 
         // 2. Sett Knappen
         if (currentTrainingMode === 'standard') {
             currentDealerPositionIndex = Math.floor(Math.random() * numPlayers);
+             console.log(`Standard mode: Dealer set to index ${currentDealerPositionIndex}`);
         } else {
             const positions = numPlayers === 9 ? positions9max : positions6max;
-            const heroTargetPosIndex = positions.indexOf(currentFixedPosition);
+            const heroTargetPos = currentFixedPosition || (numPlayers === 9 ? "BTN" : "BTN"); // Fallback
+            const heroTargetPosIndex = positions.indexOf(heroTargetPos);
             if (heroTargetPosIndex === -1) {
-                console.error(`Invalid fixed position: ${currentFixedPosition}`);
-                currentFixedPosition = "BTN"; // Fallback
-                positionSelect.value = currentFixedPosition;
+                console.error(`Invalid fixed position: ${heroTargetPos}`);
+                currentFixedPosition = "BTN"; positionSelect.value = currentFixedPosition;
                 heroTargetPosIndex = positions.indexOf(currentFixedPosition);
             }
-            const btnIndexInList = positions.indexOf("BTN");
-            let targetRelIndex = (heroTargetPosIndex - btnIndexInList + numPlayers) % numPlayers;
+            const btnListIndex = positions.indexOf("BTN");
+            let targetRelIndex = (heroTargetPosIndex - btnListIndex + numPlayers) % numPlayers;
             currentDealerPositionIndex = (HERO_SEAT_INDEX - targetRelIndex + numPlayers) % numPlayers;
+             console.log(`Trainer mode: Target ${heroTargetPos}. Dealer set to index ${currentDealerPositionIndex}`);
         }
 
-        // 3. Oppdater posisjoner FØR scenario genereres, slik at vi vet Hero sin posisjon
-        updatePlayerPositionsRelativeToButton();
+        // 3. Oppdater posisjoner
+        updatePlayerPositionsRelativeToButton(); // Setter currentHeroPositionName
         if (!currentHeroPositionName || currentHeroPositionName === '??') {
-             alert("Klarte ikke bestemme posisjon. Prøv igjen.");
-             return;
+             console.error("Could not determine Hero Position after update!");
+             alert("Feil ved posisjonsberegning. Prøv igjen."); return;
         }
+         console.log(`Hero position calculated as: ${currentHeroPositionName}`);
 
 
-        // 4. Generer Scenario & Handlinger
+        // 4. Generer Scenario
         const positions = numPlayers === 9 ? positions9max : positions6max;
-        const sbPos = getPositionName((currentDealerPositionIndex + 1) % numPlayers, numPlayers);
-        const bbPos = getPositionName((currentDealerPositionIndex + 2) % numPlayers, numPlayers);
+        const sbSeatIndex = (currentDealerPositionIndex + 1) % numPlayers;
+        const bbSeatIndex = (currentDealerPositionIndex + 2) % numPlayers;
+        // BRUK calculatePositionName for å få korrekte posisjonsnavn for blinds
+        const sbPos = calculatePositionName(sbSeatIndex, currentDealerPositionIndex, numPlayers);
+        const bbPos = calculatePositionName(bbSeatIndex, currentDealerPositionIndex, numPlayers);
 
         actionsPrecedingHero.push({ position: sbPos, actionType: "POST_SB", amount: 0.5 });
         actionsPrecedingHero.push({ position: bbPos, actionType: "POST_BB", amount: 1 });
 
         const randomScenarioChoice = Math.random();
         let scenarioGenerated = false;
+         let potentialScenario = 'RFI'; // Start med RFI
 
-        // Prøv vs RFI hvis ikke blinds eller UTG
         if (randomScenarioChoice >= 0.5 && !['SB', 'BB', 'UTG'].includes(currentHeroPositionName)) {
             const heroListIndex = positions.indexOf(currentHeroPositionName);
             const possibleRaiserPositions = [];
-            // Finn alle posisjoner *før* Hero i listen (unntatt blinds)
-            for(let i = 0; i < heroListIndex; i++) {
+            for (let i = 0; i < heroListIndex; i++) {
                 if (!['SB', 'BB'].includes(positions[i])) {
                     possibleRaiserPositions.push(positions[i]);
                 }
@@ -391,57 +398,68 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (possibleRaiserPositions.length > 0) {
                 const raiserPosition = possibleRaiserPositions[Math.floor(Math.random() * possibleRaiserPositions.length)];
-                let raiseAmount = currentStackDepth === '10bb' ? 2 : (numPlayers === 6 ? 2.5 : 3);
-                const potentialScenario = `vs_${raiserPosition}_RFI`;
-
-                // SJEKK OM RANGEN FINNES FØR VI BRUKER SCENARIOET!
+                potentialScenario = `vs_${raiserPosition}_RFI`;
                 const rangeExists = GTO_RANGES[currentStackDepth]?.[`${numPlayers}max`]?.[currentHeroPositionName]?.[potentialScenario];
 
                 if (rangeExists) {
-                    currentScenario = potentialScenario; // Bruk scenarioet
+                    currentScenario = potentialScenario;
+                    let raiseAmount = currentStackDepth === '10bb' ? 2 : (numPlayers === 6 ? 2.5 : 3);
                     actionsPrecedingHero.push({ position: raiserPosition, actionType: "Raise", amount: raiseAmount });
                     currentPotSizeBB += raiseAmount;
                     currentScenarioDescription = `${raiserPosition} høyner til ${raiseAmount} BB. Din tur.`;
-
-                    // Anta fold fra mellomliggende
                     const raiserListIndex = positions.indexOf(raiserPosition);
                     for(let i = raiserListIndex + 1; i < heroListIndex; i++) {
                          const foldPosName = positions[i];
-                         if (!['SB', 'BB'].includes(foldPosName)) { // Ikke legg til fold for blinds
-                              actionsPrecedingHero.push({position: foldPosName, actionType: "Fold"});
+                         if (!['SB', 'BB'].includes(foldPosName)) {
+                              actionsPrecedingHero.push({ position: foldPosName, actionType: "Fold" });
                          }
                     }
-                     firstActionPlayerIndex = HERO_SEAT_INDEX;
-                     scenarioGenerated = true;
+                    firstActionPlayerIndex = HERO_SEAT_INDEX;
+                    scenarioGenerated = true;
+                     console.log(`Scenario set to: ${currentScenario}`);
                  } else {
                       console.warn(`Mangler range for ${potentialScenario} for ${currentHeroPositionName}. Faller tilbake til RFI.`);
                  }
             }
         }
 
-        // Default til RFI
         if (!scenarioGenerated) {
             currentScenario = 'RFI';
-             currentScenarioDescription = `Det foldes til deg. Din tur.`;
-              // Anta at alle før Hero har foldet
-              const heroListIndex = positions.indexOf(currentHeroPositionName);
-              const bbListIndex = positions.indexOf("BB"); // Indeks i posisjonslisten
+            currentScenarioDescription = `Det foldes til deg. Din tur.`;
+             const heroListIndex = positions.indexOf(currentHeroPositionName);
+             const bbListIndex = positions.indexOf("BB");
+             // Finner første spiller *etter* BB
+             let firstPotentialActorIndex = (getActualSeatIndex("BB", currentDealerPositionIndex, numPlayers) + 1) % numPlayers;
 
-              // Gå fra UTG (første etter BB i listen) opp til Hero
-              for (let i = (bbListIndex + 1) % numPlayers; i !== heroListIndex; i = (i + 1) % numPlayers) {
-                   const posName = positions[i];
-                   if (!['SB', 'BB'].includes(posName)) {
+             // Gå gjennom seter fra første etter BB opp til Hero
+             let currentSeatIndex = firstPotentialActorIndex;
+             while(currentSeatIndex !== HERO_SEAT_INDEX) {
+                  const posName = calculatePositionName(currentSeatIndex, currentDealerPositionIndex, numPlayers);
+                   if (!['SB', 'BB'].includes(posName)) { // Legg til fold for alle unntatt blinds
                         actionsPrecedingHero.push({ position: posName, actionType: "Fold" });
                    }
-              }
+                  currentSeatIndex = (currentSeatIndex + 1) % numPlayers;
+                   if (currentSeatIndex === firstPotentialActorIndex) break; // Unngå evig loop
+             }
               firstActionPlayerIndex = HERO_SEAT_INDEX;
+              console.log(`Scenario set to: ${currentScenario}`);
+        }
+
+        // Siste sjekk for range eksistens
+        const finalRangeExists = GTO_RANGES[currentStackDepth]?.[`${numPlayers}max`]?.[currentHeroPositionName]?.[currentScenario];
+        if (!finalRangeExists) {
+             console.error(`FATAL: Range data missing for final scenario: ${currentStackDepth}, ${numPlayers}max, ${currentHeroPositionName}, ${currentScenario}`);
+             feedbackText.textContent = "Feil: Mangler range data. Prøv 'Ny Hånd'.";
+             correctActionText.textContent = `Mangler: ${currentStackDepth} ${numPlayers}max ${currentHeroPositionName} ${currentScenario}`;
+             actionButtonsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
+             return;
         }
 
         // 5. Oppdater UI
         scenarioDescriptionElement.textContent = currentScenarioDescription;
-        updatePlayerPositionsRelativeToButton(); // Oppdater posisjoner og marker hvem som har tur
+        updatePlayerPositionsRelativeToButton(); // Kalles igjen for å markere hvem som har tur
         displayHeroCards();
-        displayPrecedingActions(); // Vis handlingene
+        displayPrecedingActions();
         potDisplaySpan.textContent = currentPotSizeBB.toFixed(1);
         updateActionButtons();
 
@@ -450,22 +468,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const handKey = getHandKey(heroHand);
             if (handKey) {
                 displayRangeGridForSituation(currentStackDepth, numPlayers, currentHeroPositionName, currentScenario);
-                rangeDisplayContainer.style.display = 'block';
             }
         } else {
             rangeDisplayContainer.style.display = 'none';
         }
+         console.log("--- setupNewHand Finished ---"); // Debug log
     }
 
-
-    function handleUserAction(userActionCode) { /* ... (samme som før) ... */
+    // handleUserAction og displayRangeGridForSituation forblir som i V3/forrige svar
+    function handleUserAction(userActionCode) { /* ... (samme som V3) ... */
          const handKey = getHandKey(heroHand);
          if (!handKey || !currentHeroPositionName || currentHeroPositionName === '??') {
               console.error("Kan ikke håndtere handling - ugyldig state", heroHand, currentHeroPositionName);
               return;
          }
 
-         console.log(`Handling for: ${currentStackDepth}, ${numPlayers}max, ${currentHeroPositionName}, ${currentScenario}, Hånd: ${handKey}, BrukerValg: ${userActionCode}`); // For debugging
+         console.log(`Handling for: ${currentStackDepth}, ${numPlayers}max, ${currentHeroPositionName}, ${currentScenario}, Hånd: ${handKey}, BrukerValg: ${userActionCode}`);
 
          const gtoActionObject = getGtoAction(currentStackDepth, numPlayers, currentHeroPositionName, currentScenario, handKey);
          if (!gtoActionObject || Object.keys(gtoActionObject).length === 0) {
@@ -493,66 +511,46 @@ document.addEventListener('DOMContentLoaded', () => {
                });
           }
 
-         // Korriger logikk for 3B/R (begge betyr 'høyne' i praksis her)
          let normalizedUserAction = userActionCode;
-         if (currentScenario === 'RFI' && userActionCode === 'R') {/*OK*/}
-         else if (currentScenario.startsWith('vs_') && userActionCode === '3B') {/*OK*/}
-         else if (currentScenario.startsWith('vs_') && userActionCode === 'R') {
-             normalizedUserAction = '3B'; // Hvis bruker trykker Raise i et vs RFI-scenario, tolk det som 3B
-             console.log("Tolket 'Raise' som '3B' i vs RFI scenario");
-         } else if (currentScenario === 'RFI' && userActionCode === '3B'){
-             normalizedUserAction = 'R'; // Hvis bruker trykker 3bet i RFI, tolk som Raise
-             console.log("Tolket '3B' som 'R' i RFI scenario");
-         }
-         // Similar logic for Push vs Raise/3Bet at 10bb
-          if (currentStackDepth === '10bb' && (normalizedUserAction === 'R' || normalizedUserAction === '3B')) {
-              normalizedUserAction = 'P';
-              console.log("Tolket 'Raise/3B' som 'Push' ved 10bb");
-          } else if (currentStackDepth === '10bb' && userActionCode === 'P') {
-              normalizedUserAction = 'P'; // OK
-          }
+         if (currentScenario === 'RFI' && userActionCode === '3B') { normalizedUserAction = 'R'; console.log("Tolket '3B' som 'R' i RFI"); }
+         else if (currentScenario.startsWith('vs_') && userActionCode === 'R') { normalizedUserAction = '3B'; console.log("Tolket 'Raise' som '3B' i vs RFI"); }
+         if (currentStackDepth === '10bb' && (normalizedUserAction === 'R' || normalizedUserAction === '3B')) { normalizedUserAction = 'P'; console.log("Tolket 'Raise/3B' som 'Push' ved 10bb"); }
 
          if (gtoActionObject[normalizedUserAction] && gtoActionObject[normalizedUserAction] > 0) {
-             if(normalizedUserAction === primaryAction && gtoActionObject[normalizedUserAction] > 0.7) { // Tydelig korrekt
-                  feedback = "Korrekt!";
-                  feedbackText.className = 'correct';
-                  isCorrect = true;
-             } else { // Gyldig mixed, eller primær med lavere frekvens
-                  feedback = "OK (Mixed Strategi)";
-                  feedbackText.className = 'correct';
-                  isCorrect = true;
+             if(normalizedUserAction === primaryAction && gtoActionObject[normalizedUserAction] > 0.7) {
+                  feedback = "Korrekt!"; feedbackText.className = 'correct'; isCorrect = true;
+             } else {
+                  feedback = "OK (Mixed Strategi)"; feedbackText.className = 'correct'; isCorrect = true;
              }
          } else {
-             feedback = "Feil!";
-             feedbackText.className = 'incorrect';
-             isCorrect = false;
+             feedback = "Feil!"; feedbackText.className = 'incorrect'; isCorrect = false;
          }
 
          correctAction = "Anbefalt GTO: ";
          let actionStrings = [];
          actions.forEach((act, i) => actionStrings.push(`${act} (${(frequencies[i] * 100).toFixed(0)}%)`));
          correctAction += actionStrings.join(', ');
-         if (!isCorrect) {
-             correctAction += ` (Primær: ${primaryAction})`;
-         }
+         if (!isCorrect) { correctAction += ` (Primær: ${primaryAction})`; }
 
          feedbackText.textContent = feedback;
          correctActionText.textContent = correctAction;
 
          if (currentTrainingMode === 'standard' || !isCorrect) {
              displayRangeGridForSituation(currentStackDepth, numPlayers, currentHeroPositionName, currentScenario);
-             rangeDisplayContainer.style.display = 'block';
          }
+
+         // Deaktiver knapper etter handling
+         actionButtonsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
     }
 
-     function displayRangeGridForSituation(stack, players, pos, scenario) { /* ... (samme som før) ... */
+     function displayRangeGridForSituation(stack, players, pos, scenario) { /* ... (samme som V3) ... */
          rangeGrid.innerHTML = '';
          const fullRange = getFullRange(stack, players, pos, scenario);
-          rangeSituationInfo.textContent = `${stack} ${players}max - ${pos} ${scenario}`; // Info til brukeren
+          rangeSituationInfo.textContent = `${stack} ${players}max - ${pos} ${scenario}`;
 
           if (!fullRange || Object.keys(fullRange).length === 0) {
               rangeGrid.innerHTML = `<p style="grid-column: span 13; text-align: center;">Range ikke funnet for ${pos} i scenario ${scenario} (${stack}, ${players}max).</p>`;
-              rangeDisplayContainer.style.display = 'block'; // Vis containeren selv om range er tom
+              rangeDisplayContainer.style.display = 'block';
               return;
           }
 
@@ -564,48 +562,35 @@ document.addEventListener('DOMContentLoaded', () => {
                  let handKey;
                  const index1 = ranksRev.indexOf(rank1);
                  const index2 = ranksRev.indexOf(rank2);
-
                  if (index1 === index2) { handKey = rank1 + rank2; }
                  else if (index1 < index2) { handKey = rank1 + rank2 + 's'; }
                  else { handKey = rank2 + rank1 + 'o'; }
 
-                 // Korrekt visning av T, J, Q, K, A
                  let displayRank1 = rank1 === 'T' ? '10' : rank1;
                  let displayRank2 = rank2 === 'T' ? '10' : rank2;
                  let displayText = '';
-                 if (index1 === index2) { displayText = displayRank1; } // Vis bare en rank for par
-                 else if (index1 < index2) { displayText = displayRank1 + displayRank2; } // Suited
-                 else { displayText = displayRank2 + displayRank1; } // Offsuit
-
+                 if (index1 === index2) { displayText = displayRank1; }
+                 else if (index1 < index2) { displayText = displayRank1 + displayRank2; }
+                 else { displayText = displayRank2 + displayRank1; }
                  cell.textContent = displayText;
 
                  const gtoAction = fullRange[handKey] || { "F": 1.0 };
                  const actions = Object.keys(gtoAction);
                  const frequencies = Object.values(gtoAction);
-                 let tooltip = `${handKey}:\n`; // Start tooltip med håndnøkkel
+                 let tooltip = `${handKey}:\n`;
                  let primaryAction = 'F';
                  let isMixed = false;
                  let primaryFreq = 0;
-
                  if (actions.length > 0) {
-                      actions.forEach((act, i) => {
-                          if (frequencies[i] > primaryFreq) {
-                              primaryFreq = frequencies[i];
-                              primaryAction = act;
-                          }
-                      });
+                      actions.forEach((act, i) => { if (frequencies[i] > primaryFreq) { primaryFreq = frequencies[i]; primaryAction = act; } });
                   }
-
                  if (actions.length > 1) {
                      isMixed = true;
                      let actionStrings = [];
                       actions.forEach((act, i) => actionStrings.push(`${act}: ${(frequencies[i] * 100).toFixed(0)}%`));
                      tooltip += actionStrings.join('\n');
-                 } else if (actions.length === 1) {
-                      tooltip += `${primaryAction}: 100%`;
-                 } else {
-                      tooltip += "Fold: 100%";
-                 }
+                 } else if (actions.length === 1) { tooltip += `${primaryAction}: 100%`; }
+                 else { tooltip += "Fold: 100%"; }
 
                   if (isMixed) { cell.classList.add('range-mixed'); }
                   else if (['R', '3B', 'P'].includes(primaryAction)) { cell.classList.add('range-raise'); }
@@ -619,7 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  rangeGrid.appendChild(cell);
              });
          });
-           rangeDisplayContainer.style.display = 'block'; // Sørg for at containeren vises
+           rangeDisplayContainer.style.display = 'block';
      }
 
 
@@ -662,13 +647,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     actionButtonsContainer.querySelectorAll('button').forEach(button => {
         button.addEventListener('click', (e) => {
-            // Deaktiver knapper midlertidig for å unngå dobbelklikk
              actionButtonsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
              handleUserAction(e.target.dataset.action);
-             // Aktiver relevante knapper igjen ETTER feedback er gitt
-             // (eller vent på "Ny Hånd"-knappen)
-             // For enkelhets skyld venter vi på "Ny Hånd" i V1
-             // updateActionButtons(); // Kan aktiveres her hvis ønskelig
+             // NB: Knapper forblir deaktivert til "Ny Hånd" trykkes
         });
     });
 
