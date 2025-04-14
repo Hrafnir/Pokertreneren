@@ -31,22 +31,26 @@ h3 {
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     display: flex;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 10px 15px; /* Justert gap */
     align-items: center;
     justify-content: center;
     width: 90%;
-    max-width: 800px;
+    max-width: 900px; /* Økt litt for delay input */
 }
 
 .controls label {
     margin-right: 5px;
     font-weight: 500;
 }
-.controls select, .controls button {
+.controls select, .controls input, .controls button {
     padding: 8px 12px;
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 14px;
+    vertical-align: middle; /* Juster vertikal alignment */
+}
+.controls input[type="number"] {
+    width: 50px; /* Fast bredde for nummerinput */
 }
 .controls button {
     background-color: #007bff;
@@ -60,7 +64,7 @@ h3 {
 }
 
 .table-container {
-    margin-bottom: 25px;
+    margin-bottom: 20px; /* Redusert litt */
     position: relative;
     width: 90%;
     max-width: 750px;
@@ -85,8 +89,8 @@ h3 {
 
 .seat {
     position: absolute;
-    width: 80px; /* Litt bredere for å romme kort bedre */
-    height: 100px;/* Litt høyere */
+    width: 85px; /* Økt bredde for å passe bedre */
+    height: 105px;/* Økt høyde */
     background-color: #f8f9fa;
     border: 1px solid #adb5bd;
     border-radius: 5px;
@@ -100,17 +104,18 @@ h3 {
     box-shadow: 0 1px 3px rgba(0,0,0,0.15);
     transform: translate(-50%, -50%);
     transition: background-color 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
-    overflow: visible; /* Tillat at større Hero-kort "stikker ut" litt */
+    overflow: hidden; /* Skjul kort som går utenfor (unntatt Hero) */
 }
 .seat.hero-seat {
     border: 3px solid #ffc107;
     background-color: #fffde7;
-    /* Hero setet trenger ikke fast størrelse, tilpasser seg innhold */
-    width: auto; /* La bredden bestemmes av innholdet (større kort) */
-    height: auto;
-    overflow: visible;
-    padding: 5px; /* Legg til padding direkte her for Hero */
-     z-index: 5; /* Sørg for at Hero ligger over evt. andre elementer */
+    width: auto; /* Bredde styres av innhold */
+    height: auto; /* Høyde styres av innhold */
+    min-width: 150px; /* Minimumsbredde for Hero */
+    overflow: visible; /* Tillat at kort stikker ut */
+    padding: 8px; /* Økt padding for Hero-setet */
+    z-index: 5;
+    /* Sentrering håndteres av transform */
 }
 .seat.action-on {
      box-shadow: 0 0 12px 4px #ffc107;
@@ -127,418 +132,171 @@ h3 {
     padding: 5px;
     box-sizing: border-box;
 }
-/* Fjern padding fra hero-seat sin content, da den er på selve setet */
 .hero-seat .seat-content {
     padding: 0;
-    justify-content: center; /* Sentrer Hero-kortene */
+    justify-content: center;
+    /* Ingen fast høyde, la innholdet bestemme */
 }
 
 
 /* --- Action Styling for Seats --- */
-.seat.seat-folded {
-    background-color: #ffebee;
-    opacity: 0.7;
-}
-.seat.seat-called {
-    background-color: #e3f2fd;
-}
-.seat.seat-raised, .seat.seat-3bet, .seat.seat-pushed {
-    background-color: #e8f5e9;
-}
+.seat.seat-folded { background-color: #ffebee; opacity: 0.7; }
+.seat.seat-called { background-color: #e3f2fd; }
+.seat.seat-raised, .seat.seat-3bet, .seat.seat-pushed { background-color: #e8f5e9; }
 .seat.seat-posted-blind { }
 
 
 .player-info {
      margin-bottom: 4px;
-     /* Sikre at info vises selv i hero-seat uten fast høyde */
      width: 100%;
-     flex-shrink: 0; /* Ikke la info krympe */
+     flex-shrink: 0;
 }
-.player-name {
-    font-weight: bold;
-    font-size: 11px;
-    margin-bottom: 1px;
-    white-space: nowrap;
-}
-.player-position {
-     font-style: italic;
-     font-size: 10px;
-     color: #555;
-}
+.hero-seat .player-info { display: none; } /* Skjul navn/pos for Hero i setet */
+
+.player-name { font-weight: bold; font-size: 11px; margin-bottom: 1px; white-space: nowrap; }
+.player-position { font-style: italic; font-size: 10px; color: #555; }
 .player-action {
-    padding: 3px 0;
-    font-size: 11px;
-    font-weight: bold;
-    width: 100%;
-    line-height: 1.2;
-    color: #333;
-    min-height: 1.2em;
-    flex-shrink: 0; /* Ikke la action krympe */
+    padding: 3px 0; font-size: 11px; font-weight: bold; width: 100%;
+    line-height: 1.2; color: #333; min-height: 1.2em; flex-shrink: 0;
 }
+.hero-seat .player-action { display: none; } /* Skjul action-tekst i Hero-setet */
 
 /* Farger for handlingstekst */
 .player-action.action-fold { color: #dc3545; }
 .player-action.action-call { color: #007bff; }
-.player-action.action-raise,
-.player-action.action-3bet,
-.player-action.action-push { color: #28a745; }
+.player-action.action-raise, .player-action.action-3bet, .player-action.action-push { color: #28a745; }
 .player-action.action-post { color: #6c757d; }
 
 
 .player-cards {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 3px;
-    width: 100%;
-    min-height: 55px; /* Økt min høyde litt */
+    display: flex; justify-content: center; align-items: center;
+    gap: 3px; width: 100%; min-height: 55px;
 }
-/* Fjern min-høyde for hero, la kortene bestemme */
-.hero-seat .player-cards {
-    min-height: initial;
-    margin-top: 5px; /* Litt avstand i hero-setet */
-}
+.hero-seat .player-cards { min-height: initial; margin: 0; /* Fjerner margin */ }
 
 
 /* --- Styling for MOTSTANDER kort-placeholders --- */
 .player-cards .card {
-    width: 38px;
-    height: 55px;
-    border: 1px solid #adb5bd;
-    border-radius: 4px;
-    background-color: white; /* Default hvit */
-    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
-    display: flex;
-    justify-content: center; /* Sentrer '?' */
-    align-items: center; /* Sentrer '?' */
-    font-weight: bold;
-    position: relative;
-    box-sizing: border-box;
-    padding: 2px;
-    margin: 0;
-    transition: background-color 0.3s ease; /* Animer fargeendring */
+    width: 38px; height: 55px; border: 1px solid #adb5bd; border-radius: 4px;
+    background-color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    display: flex; justify-content: center; align-items: center;
+    font-weight: bold; position: relative; box-sizing: border-box;
+    padding: 2px; margin: 0; transition: background-color 0.3s ease, border-color 0.3s ease;
+    overflow: hidden; /* Skjul innhold som '?' */
 }
 .player-cards .card.card-placeholder {
-    font-size: 22px;
-    color: #ccc; /* Farge på '?' */
+    font-size: 22px; color: #ccc;
 }
-.player-cards .card.card-placeholder::before {
-     content: '?';
-}
-/* Farger for placeholder-bakgrunn basert på action */
-.player-cards .card-folded {
-    background-color: #ffcdd2; /* Myk rød */
-    color: transparent; /* Skjul '?' */
-    border-color: #e57373; /* Mørkere rød kant */
-}
-.player-cards .card-folded::before { content: ''; } /* Fjern '?' */
+.player-cards .card.card-placeholder::before { content: '?'; }
 
-.player-cards .card-called {
-    background-color: #bbdefb; /* Myk blå */
-    color: transparent;
-    border-color: #64b5f6;
-}
-.player-cards .card-called::before { content: ''; }
+/* Farger for placeholder-BAKGRUNN basert på action */
+.player-cards .card-folded { background-color: #ffcdd2; border-color: #e57373; }
+.player-cards .card-called { background-color: #bbdefb; border-color: #64b5f6; }
+.player-cards .card-raised { background-color: #c8e6c9; border-color: #81c784; }
+.player-cards .card-3bet { background-color: #fff9c4; border-color: #fff176; }
+.player-cards .card-pushed { background-color: #b2ebf2; border-color: #4dd0e1; }
 
-.player-cards .card-raised {
-    background-color: #c8e6c9; /* Myk grønn */
-    color: transparent;
-    border-color: #81c784;
-}
-.player-cards .card-raised::before { content: ''; }
-
-.player-cards .card-3bet {
-    background-color: #fff9c4; /* Myk gul */
-    color: transparent;
-    border-color: #fff176;
-}
-.player-cards .card-3bet::before { content: ''; }
-
-.player-cards .card-pushed {
-    background-color: #b2ebf2; /* Myk cyan */
-    color: transparent;
-    border-color: #4dd0e1;
-}
+/* Skjul '?' for fargede kort */
+.player-cards .card-folded::before,
+.player-cards .card-called::before,
+.player-cards .card-raised::before,
+.player-cards .card-3bet::before,
 .player-cards .card-pushed::before { content: ''; }
 
 
 /* --- Styling for HERO sine (faktiske) kort --- */
-/* Større kort spesifikt for .hero-seat */
 .hero-seat .player-cards .card {
-    width: 65px; /* Tilbake til større bredde */
-    height: 95px; /* Tilbake til større høyde */
-    border-radius: 6px;
-    padding: 5px;
-    margin: 0 5px; /* Legg tilbake margin for Hero-kort */
-    background-color: white; /* Sørg for hvit bakgrunn */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    /* Ikke placeholder-styling */
-    justify-content: space-between;
-    align-items: center;
+    width: 70px; /* Økt */
+    height: 105px; /* Økt */
+    border-radius: 6px; padding: 5px; margin: 0 5px; background-color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); justify-content: space-between; align-items: center;
+    overflow: visible; /* Vis rank/suit */
 }
-.hero-seat .player-cards .card.card-placeholder {
-     /* Hvis Hero ikke har kort ennå (skal ikke skje her) */
-    justify-content: center;
-    font-size: 40px;
-    color: #ccc;
+.hero-seat .player-cards .card.card-placeholder { /* Fallback */
+    justify-content: center; font-size: 40px; color: #ccc;
 }
 .hero-seat .player-cards .card.card-placeholder::before { content: '?'; }
 
-/* Større rank/suit for Hero-kort */
-.hero-seat .player-cards .card-rank {
-    position: absolute;
-    font-size: 18px;
-    line-height: 1;
-}
-.hero-seat .player-cards .card-suit {
-    font-size: 16px;
-}
+.hero-seat .player-cards .card-rank { position: absolute; font-size: 20px; line-height: 1; } /* Økt */
+.hero-seat .player-cards .card-suit { font-size: 18px; } /* Økt */
 .hero-seat .player-cards .card-top-left { top: 6px; left: 6px; text-align: center;}
 .hero-seat .player-cards .card-bottom-right { bottom: 6px; right: 6px; text-align: center; transform: rotate(180deg);}
+.hero-seat .player-cards .card-suit-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 44px; } /* Økt */
 
-.hero-seat .player-cards .card-suit-center {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 40px;
-}
-
-/* Farger for symboler (uendret) */
 .spades, .clubs { color: black; }
 .hearts, .diamonds { color: red; }
 
 
-.dealer-button {
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    background: radial-gradient(circle, #ffffff 60%, #e0e0e0 100%);
-    color: #424242;
-    border: 2px solid #757575;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: bold;
-    font-size: 16px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-    z-index: 10;
+.dealer-button { /* ... (uendret) ... */
+    position: absolute; width: 30px; height: 30px; background: radial-gradient(circle, #ffffff 60%, #e0e0e0 100%);
+    color: #424242; border: 2px solid #757575; border-radius: 50%; display: flex; justify-content: center;
+    align-items: center; font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); z-index: 10;
 }
-.pot-display {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: rgba(0, 0, 0, 0.65);
-    color: white;
-    padding: 8px 14px;
-    border-radius: 5px;
-    font-size: 16px;
-    font-weight: 500;
-    z-index: 5;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+.pot-display { /* ... (uendret) ... */
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0, 0, 0, 0.65);
+    color: white; padding: 8px 14px; border-radius: 5px; font-size: 16px; font-weight: 500; z-index: 5; border: 1px solid rgba(255, 255, 255, 0.2);
 }
-.scenario-desc {
-     position: absolute;
-     top: 15px;
-     left: 50%;
-     transform: translateX(-50%);
-     font-style: italic;
-     color: #fff;
-     font-size: 14px;
-     background-color: rgba(0, 0, 0, 0.5);
-     padding: 4px 10px;
-     border-radius: 4px;
-     z-index: 15;
-     text-align: center;
-     max-width: 80%;
+.scenario-desc { /* ... (uendret) ... */
+     position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-style: italic; color: #fff; font-size: 14px;
+     background-color: rgba(0, 0, 0, 0.5); padding: 4px 10px; border-radius: 4px; z-index: 15; text-align: center; max-width: 80%;
 }
 
 /* Hero Controls Area */
-.hero-controls {
-    text-align: center;
-    margin-bottom: 20px;
-    margin-top: 10px;
-    width: 100%;
-}
-.hero-controls h2 {
-    margin-bottom: 15px;
-    font-size: 1.4em;
-}
+.hero-controls { text-align: center; margin-bottom: 20px; margin-top: 10px; width: 100%; }
+.hero-controls h2 { margin-bottom: 15px; font-size: 1.4em; }
 #heroPosition { font-weight: bold; color: #d32f2f; }
 
-.action-buttons button {
-    padding: 10px 20px;
-    margin: 5px 8px;
-    font-size: 16px;
-    cursor: pointer;
-    border-radius: 5px;
-    border: none;
-    transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.1s ease;
-    min-width: 80px;
+.action-buttons button { /* ... (uendret) ... */
+    padding: 10px 20px; margin: 5px 8px; font-size: 16px; cursor: pointer; border-radius: 5px; border: none;
+    transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.1s ease; min-width: 80px;
 }
-.action-buttons button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background-color: #bdbdbd;
-    color: #757575;
-}
-.action-buttons button:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
+.action-buttons button:disabled { opacity: 0.5; cursor: not-allowed; background-color: #bdbdbd; color: #757575; }
+.action-buttons button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 .action-buttons button[data-action="F"] { background-color: #f44336; color: white;}
 .action-buttons button[data-action="C"] { background-color: #2196F3; color: white;}
 .action-buttons button[data-action="R"] { background-color: #4CAF50; color: white;}
 .action-buttons button[data-action="3B"] { background-color: #FFC107; color: black;}
 .action-buttons button[data-action="P"] { background-color: #00BCD4; color: white;}
-
 .action-buttons button[data-action="F"]:hover:not(:disabled) { background-color: #d32f2f; }
 .action-buttons button[data-action="C"]:hover:not(:disabled) { background-color: #1976D2; }
 .action-buttons button[data-action="R"]:hover:not(:disabled) { background-color: #388E3C; }
 .action-buttons button[data-action="3B"]:hover:not(:disabled) { background-color: #FFA000; }
 .action-buttons button[data-action="P"]:hover:not(:disabled) { background-color: #0097A7; }
 
-.feedback-area {
-    margin-top: 15px;
-    padding: 15px 20px;
-    background-color: #e9ecef;
-    border: 1px solid #ced4da;
-    border-radius: 5px;
-    min-height: 50px;
-    width: 90%;
-    max-width: 800px;
-    text-align: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+.feedback-area { /* ... (uendret) ... */
+    margin-top: 15px; padding: 15px 20px; background-color: #e9ecef; border: 1px solid #ced4da; border-radius: 5px;
+    min-height: 50px; width: 90%; max-width: 800px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
-#feedbackText {
-    font-weight: bold;
-    margin-bottom: 8px;
-    font-size: 18px;
-}
-#feedbackText.correct { color: #388E3C; }
-#feedbackText.incorrect { color: #d32f2f; }
+#feedbackText { font-weight: bold; margin-bottom: 8px; font-size: 18px; }
+#feedbackText.correct { color: #388E3C; } #feedbackText.incorrect { color: #d32f2f; }
+#correctActionText { font-style: italic; color: #495057; font-size: 14px; margin-bottom: 10px; }
 
-#correctActionText {
-    font-style: italic;
-    color: #495057;
-    font-size: 14px;
-    margin-bottom: 10px;
+#rangeDisplayContainer { /* ... (uendret) ... */
+    margin-top: 15px; text-align: left; width: fit-content; margin-left: auto; margin-right: auto; border: 1px solid #ccc;
+    padding: 15px; background-color: #fff; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-
-#rangeDisplayContainer {
-    margin-top: 15px;
-    text-align: left;
-    width: fit-content;
-    margin-left: auto;
-    margin-right: auto;
-    border: 1px solid #ccc;
-    padding: 15px;
-    background-color: #fff;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-#rangeDisplayContainer h3 {
-    margin-top: 0;
-    margin-bottom: 12px;
-    font-size: 16px;
-    text-align: center;
-}
+#rangeDisplayContainer h3 { margin-top: 0; margin-bottom: 12px; font-size: 16px; text-align: center; }
 #rangeSituationInfo { font-weight: normal; font-style: italic; }
 
-#rangeGrid {
-    display: grid;
-    grid-template-columns: repeat(13, 36px);
-    grid-template-rows: repeat(13, 36px);
-    gap: 1px;
-    border: 1px solid #dee2e6;
-    margin-bottom: 10px;
-    background-color: #dee2e6;
+#rangeGrid { /* ... (uendret) ... */
+    display: grid; grid-template-columns: repeat(13, 36px); grid-template-rows: repeat(13, 36px); gap: 1px;
+    border: 1px solid #dee2e6; margin-bottom: 10px; background-color: #dee2e6;
 }
-
-.range-cell {
-    border: none;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 10px;
-    font-weight: 500;
-    cursor: default;
-    background-color: #f8f9fa;
-    position: relative;
-    color: #343a40;
-    box-sizing: border-box;
-    line-height: 1.1;
-    word-break: break-all;
-    transition: transform 0.1s ease;
+.range-cell { /* ... (uendret) ... */
+    border: none; display: flex; justify-content: center; align-items: center; font-size: 10px; font-weight: 500; cursor: default;
+    background-color: #f8f9fa; position: relative; color: #343a40; box-sizing: border-box; line-height: 1.1; word-break: break-all; transition: transform 0.1s ease;
 }
-.range-cell:hover {
-    transform: scale(1.1);
-    z-index: 1;
-    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+.range-cell:hover { transform: scale(1.1); z-index: 1; box-shadow: 0 0 5px rgba(0,0,0,0.3); }
+.range-raise { background-color: #c8e6c9; } .range-call { background-color: #bbdefb; } .range-fold { background-color: #ffcdd2; } .range-mixed { background-color: #fff9c4; }
+.range-cell .tooltiptext { /* ... (uendret) ... */
+  visibility: hidden; min-width: 110px; background-color: #424242; color: #fff; text-align: center; border-radius: 5px; padding: 7px 9px;
+  position: absolute; z-index: 20; bottom: 120%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+  font-size: 11px; font-weight: normal; white-space: pre-line; pointer-events: none;
 }
-
-
-.range-raise { background-color: #c8e6c9; }
-.range-call { background-color: #bbdefb; }
-.range-fold { background-color: #ffcdd2; }
-.range-mixed { background-color: #fff9c4; }
-
-.range-cell .tooltiptext {
-  visibility: hidden;
-  min-width: 110px;
-  background-color: #424242;
-  color: #fff;
-  text-align: center;
-  border-radius: 5px;
-  padding: 7px 9px;
-  position: absolute;
-  z-index: 20;
-  bottom: 120%;
-  left: 50%;
-  transform: translateX(-50%);
-  opacity: 0;
-  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
-  font-size: 11px;
-  font-weight: normal;
-  white-space: pre-line;
-  pointer-events: none;
+.range-cell .tooltiptext::after { /* ... (uendret) ... */
+  content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #424242 transparent transparent transparent;
 }
-.range-cell .tooltiptext::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: #424242 transparent transparent transparent;
-}
-
-
-.range-cell:hover .tooltiptext {
-  visibility: visible;
-  opacity: 0.95;
-  transition: opacity 0.3s ease;
-}
-
-.legend {
-    margin-top: 10px;
-    text-align: center;
-    font-size: 12px;
-}
-.legend span {
-    display: inline-block;
-    padding: 4px 10px;
-    margin: 3px 5px;
-    border-radius: 4px;
-    color: #424242;
-    border: 1px solid #bdbdbd;
-    font-weight: 500;
-}
-.legend-raise { background-color: #c8e6c9; }
-.legend-call { background-color: #bbdefb; }
-.legend-fold { background-color: #ffcdd2; }
-.legend-mixed { background-color: #fff9c4; }
+.range-cell:hover .tooltiptext { visibility: visible; opacity: 0.95; transition: opacity 0.3s ease; }
+.legend { margin-top: 10px; text-align: center; font-size: 12px; }
+.legend span { display: inline-block; padding: 4px 10px; margin: 3px 5px; border-radius: 4px; color: #424242; border: 1px solid #bdbdbd; font-weight: 500; }
+.legend-raise { background-color: #c8e6c9; } .legend-call { background-color: #bbdefb; } .legend-fold { background-color: #ffcdd2; } .legend-mixed { background-color: #fff9c4; }
