@@ -85,51 +85,59 @@ h3 {
 
 .seat {
     position: absolute;
-    width: 75px;
-    height: 95px;
+    width: 80px; /* Litt bredere for å romme kort bedre */
+    height: 100px;/* Litt høyere */
     background-color: #f8f9fa;
     border: 1px solid #adb5bd;
     border-radius: 5px;
-    display: flex; /* Endret til flex for seat-content */
-    justify-content: center; /* Sentrerer seat-content */
-    align-items: center; /* Sentrerer seat-content */
-    padding: 0; /* Padding styres av seat-content */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
     box-sizing: border-box;
     font-size: 10px;
     text-align: center;
     box-shadow: 0 1px 3px rgba(0,0,0,0.15);
     transform: translate(-50%, -50%);
     transition: background-color 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
-    overflow: hidden;
+    overflow: visible; /* Tillat at større Hero-kort "stikker ut" litt */
 }
-.seat.hero-seat { /* Kun for visuell markering */
+.seat.hero-seat {
     border: 3px solid #ffc107;
     background-color: #fffde7;
-    /* Størrelse styres av innholdet nå */
+    /* Hero setet trenger ikke fast størrelse, tilpasser seg innhold */
+    width: auto; /* La bredden bestemmes av innholdet (større kort) */
+    height: auto;
+    overflow: visible;
+    padding: 5px; /* Legg til padding direkte her for Hero */
+     z-index: 5; /* Sørg for at Hero ligger over evt. andre elementer */
 }
 .seat.action-on {
      box-shadow: 0 0 12px 4px #ffc107;
      border-color: #ffa000;
 }
 
-.seat-content { /* Ny div for å kontrollere innhold og padding */
+.seat-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between; /* Fordeler plass vertikalt */
+    justify-content: space-between;
     width: 100%;
-    height: 100%; /* Tar opp hele plassen i .seat */
+    height: 100%;
     padding: 5px;
-    box-sizing: border-box; /* Inkluder padding i høyde/bredde */
+    box-sizing: border-box;
+}
+/* Fjern padding fra hero-seat sin content, da den er på selve setet */
+.hero-seat .seat-content {
+    padding: 0;
+    justify-content: center; /* Sentrer Hero-kortene */
 }
 
-/* --- Action Styling --- */
+
+/* --- Action Styling for Seats --- */
 .seat.seat-folded {
     background-color: #ffebee;
     opacity: 0.7;
-}
-.seat.seat-folded .player-cards {
-    opacity: 0.5;
 }
 .seat.seat-called {
     background-color: #e3f2fd;
@@ -142,6 +150,9 @@ h3 {
 
 .player-info {
      margin-bottom: 4px;
+     /* Sikre at info vises selv i hero-seat uten fast høyde */
+     width: 100%;
+     flex-shrink: 0; /* Ikke la info krympe */
 }
 .player-name {
     font-weight: bold;
@@ -155,14 +166,14 @@ h3 {
      color: #555;
 }
 .player-action {
-    /* margin-top: auto; Fjernet, justify-content: space-between tar seg av dette */
     padding: 3px 0;
     font-size: 11px;
     font-weight: bold;
     width: 100%;
     line-height: 1.2;
     color: #333;
-    min-height: 1.2em; /* Sikrer litt plass selv om teksten er tom */
+    min-height: 1.2em;
+    flex-shrink: 0; /* Ikke la action krympe */
 }
 
 /* Farger for handlingstekst */
@@ -178,58 +189,122 @@ h3 {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 3px; /* Økt gap litt */
+    gap: 3px;
     width: 100%;
-    min-height: 50px;
-    /* margin-top: 3px; Fjernet, space-between ordner */
+    min-height: 55px; /* Økt min høyde litt */
+}
+/* Fjern min-høyde for hero, la kortene bestemme */
+.hero-seat .player-cards {
+    min-height: initial;
+    margin-top: 5px; /* Litt avstand i hero-setet */
 }
 
-/* Kortstyling (for kort inni setet) */
+
+/* --- Styling for MOTSTANDER kort-placeholders --- */
 .player-cards .card {
-    width: 38px; /* Økt bredde litt */
-    height: 55px; /* Økt høyde litt */
+    width: 38px;
+    height: 55px;
     border: 1px solid #adb5bd;
     border-radius: 4px;
-    background-color: white;
+    background-color: white; /* Default hvit */
     box-shadow: 0 1px 2px rgba(0,0,0,0.15);
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
+    justify-content: center; /* Sentrer '?' */
+    align-items: center; /* Sentrer '?' */
     font-weight: bold;
     position: relative;
     box-sizing: border-box;
     padding: 2px;
     margin: 0;
+    transition: background-color 0.3s ease; /* Animer fargeendring */
 }
 .player-cards .card.card-placeholder {
-    justify-content: center;
     font-size: 22px;
-    color: #ccc;
+    color: #ccc; /* Farge på '?' */
 }
 .player-cards .card.card-placeholder::before {
      content: '?';
 }
+/* Farger for placeholder-bakgrunn basert på action */
+.player-cards .card-folded {
+    background-color: #ffcdd2; /* Myk rød */
+    color: transparent; /* Skjul '?' */
+    border-color: #e57373; /* Mørkere rød kant */
+}
+.player-cards .card-folded::before { content: ''; } /* Fjern '?' */
 
-.player-cards .card-rank {
+.player-cards .card-called {
+    background-color: #bbdefb; /* Myk blå */
+    color: transparent;
+    border-color: #64b5f6;
+}
+.player-cards .card-called::before { content: ''; }
+
+.player-cards .card-raised {
+    background-color: #c8e6c9; /* Myk grønn */
+    color: transparent;
+    border-color: #81c784;
+}
+.player-cards .card-raised::before { content: ''; }
+
+.player-cards .card-3bet {
+    background-color: #fff9c4; /* Myk gul */
+    color: transparent;
+    border-color: #fff176;
+}
+.player-cards .card-3bet::before { content: ''; }
+
+.player-cards .card-pushed {
+    background-color: #b2ebf2; /* Myk cyan */
+    color: transparent;
+    border-color: #4dd0e1;
+}
+.player-cards .card-pushed::before { content: ''; }
+
+
+/* --- Styling for HERO sine (faktiske) kort --- */
+/* Større kort spesifikt for .hero-seat */
+.hero-seat .player-cards .card {
+    width: 65px; /* Tilbake til større bredde */
+    height: 95px; /* Tilbake til større høyde */
+    border-radius: 6px;
+    padding: 5px;
+    margin: 0 5px; /* Legg tilbake margin for Hero-kort */
+    background-color: white; /* Sørg for hvit bakgrunn */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    /* Ikke placeholder-styling */
+    justify-content: space-between;
+    align-items: center;
+}
+.hero-seat .player-cards .card.card-placeholder {
+     /* Hvis Hero ikke har kort ennå (skal ikke skje her) */
+    justify-content: center;
+    font-size: 40px;
+    color: #ccc;
+}
+.hero-seat .player-cards .card.card-placeholder::before { content: '?'; }
+
+/* Større rank/suit for Hero-kort */
+.hero-seat .player-cards .card-rank {
     position: absolute;
-    font-size: 11px; /* Økt */
+    font-size: 18px;
     line-height: 1;
 }
-.player-cards .card-suit {
-    font-size: 9px; /* Økt */
+.hero-seat .player-cards .card-suit {
+    font-size: 16px;
 }
-.player-cards .card-top-left { top: 3px; left: 3px; text-align: center;}
-.player-cards .card-bottom-right { bottom: 3px; right: 3px; text-align: center; transform: rotate(180deg);}
+.hero-seat .player-cards .card-top-left { top: 6px; left: 6px; text-align: center;}
+.hero-seat .player-cards .card-bottom-right { bottom: 6px; right: 6px; text-align: center; transform: rotate(180deg);}
 
-.player-cards .card-suit-center {
+.hero-seat .player-cards .card-suit-center {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 24px; /* Økt */
+    font-size: 40px;
 }
 
+/* Farger for symboler (uendret) */
 .spades, .clubs { color: black; }
 .hearts, .diamonds { color: red; }
 
@@ -275,9 +350,9 @@ h3 {
      background-color: rgba(0, 0, 0, 0.5);
      padding: 4px 10px;
      border-radius: 4px;
-     z-index: 15; /* Økt Z-INDEX */
+     z-index: 15;
      text-align: center;
-     max-width: 80%; /* Forhindre at den blir for bred */
+     max-width: 80%;
 }
 
 /* Hero Controls Area */
