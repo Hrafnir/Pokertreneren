@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poker Pre-flop Trainer V2.1</title> <!-- Oppdatert tittel -->
+    <title>Poker Pre-flop Trainer V2.2</title> <!-- Oppdatert tittel -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Poker Pre-flop GTO Trainer V2.1</h1> <!-- Oppdatert tittel -->
+    <h1>Poker Pre-flop GTO Trainer V2.2</h1> <!-- Oppdatert tittel -->
 
     <div class="controls">
         <label for="gameType">Bord:</label>
@@ -33,21 +33,24 @@
             <!-- Options fylles dynamisk av JS -->
         </select>
 
+        <!-- Nytt element for forsinkelse -->
+        <label for="delayInput">Neste Hånd Forsinkelse (sek):</label>
+        <input type="number" id="delayInput" value="3" min="0" max="30" step="1" style="width: 50px;">
+
          <button id="newHandBtn">Ny Hånd / Scenario</button>
     </div>
 
     <div class="table-container">
         <div class="poker-table">
-            <!-- Seter legges til dynamisk av JS -->
             <div class="pot-display">Pot: <span>1.5</span> BB</div>
             <div id="scenarioDescription" class="scenario-desc"></div>
             <div class="dealer-button">D</div>
+            <!-- Seter legges til dynamisk av JS -->
         </div>
     </div>
 
     <!-- Hero Info og Handling -->
     <div class="hero-controls">
-         <!-- Viser Hero sin *logiske* posisjon for denne hånden -->
          <h2>Din Tur (<span id="heroPosition">--</span>)</h2>
          <div class="action-buttons">
              <button data-action="F">Fold</button>
@@ -62,7 +65,8 @@
         <p id="feedbackText"></p>
         <p id="correctActionText"></p>
         <div id="rangeDisplayContainer" style="display: none;">
-            <h3>Anbefalt Range (<span id="rangeSituationInfo"></span>):</h3>
+             <!-- Tittel oppdateres av JS -->
+            <h3 id="rangeTitle">Anbefalt Range (<span id="rangeSituationInfo"></span>):</h3>
             <div id="rangeGrid">
                 <!-- Range grid genereres av JS -->
             </div>
@@ -75,7 +79,6 @@
         </div>
     </div>
 
-    <!-- Viktig: Last ranges FØR scriptet som bruker dem -->
     <script src="ranges.js"></script>
     <script src="script.js"></script>
 </body>
