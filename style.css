@@ -7,11 +7,15 @@ body {
     align-items: center;
     padding: 15px;
     line-height: 1.5;
+    min-height: 100vh;
+    box-sizing: border-box;
 }
 
 h1, h2 {
-    color: #2c5d3d; /* Dypere grønn */
+    color: #2c5d3d;
     text-align: center;
+    margin-top: 0;
+    margin-bottom: 15px;
 }
 h3 {
     margin-bottom: 5px;
@@ -20,7 +24,7 @@ h3 {
 }
 
 .controls {
-    margin-bottom: 25px;
+    margin-bottom: 20px;
     background-color: #fff;
     padding: 15px 20px;
     border-radius: 8px;
@@ -30,6 +34,8 @@ h3 {
     gap: 15px;
     align-items: center;
     justify-content: center;
+    width: 90%;
+    max-width: 800px;
 }
 
 .controls label {
@@ -43,7 +49,7 @@ h3 {
     font-size: 14px;
 }
 .controls button {
-    background-color: #007bff; /* Blå knapp */
+    background-color: #007bff;
     color: white;
     cursor: pointer;
     border: none;
@@ -54,162 +60,138 @@ h3 {
 }
 
 .table-container {
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     position: relative;
     width: 90%;
-    max-width: 700px; /* Maks bredde */
-    aspect-ratio: 1.8 / 1; /* Forhold bredde/høyde */
-    min-height: 300px; /* Minimum høyde */
+    max-width: 750px;
+    aspect-ratio: 1.8 / 1;
+    min-height: 350px;
 }
 
 .poker-table {
     width: 100%;
     height: 100%;
-    background-color: #2e7d32; /* Klassisk pokerbord-grønn */
-    border-radius: 50% / 50%; /* Mer presis oval */
-    border: 12px solid #6d4c41; /* Mørkere trebord-kant */
-    position: absolute; /* Endret til absolutt */
+    background-color: #2e7d32;
+    border-radius: 50% / 50%;
+    border: 15px solid #8d6e63;
+    position: absolute;
     top: 0;
     left: 0;
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.3);
+    box-shadow: inset 0 0 25px rgba(0,0,0,0.4), 0 6px 18px rgba(0,0,0,0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .seat {
     position: absolute;
-    width: 75px; /* Litt smalere */
+    width: 75px;
     height: 95px;
     background-color: #f8f9fa;
     border: 1px solid #adb5bd;
     border-radius: 5px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start; /* Start øverst */
-    padding: 4px;
+    display: flex; /* Endret til flex for seat-content */
+    justify-content: center; /* Sentrerer seat-content */
+    align-items: center; /* Sentrerer seat-content */
+    padding: 0; /* Padding styres av seat-content */
     box-sizing: border-box;
     font-size: 10px;
     text-align: center;
     box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-    transform: translate(-50%, -50%); /* Sentrering basert på top/left */
+    transform: translate(-50%, -50%);
+    transition: background-color 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
 }
-.seat.hero-seat {
-    border: 3px solid #ffc107; /* Gull */
-    background-color: #fffde7; /* Veldig lys gul */
+.seat.hero-seat { /* Kun for visuell markering */
+    border: 3px solid #ffc107;
+    background-color: #fffde7;
+    /* Størrelse styres av innholdet nå */
 }
-.seat.action-on { /* Klasse for å markere hvem som har handlingen */
-     box-shadow: 0 0 10px 3px #ffc107;
+.seat.action-on {
+     box-shadow: 0 0 12px 4px #ffc107;
+     border-color: #ffa000;
 }
 
+.seat-content { /* Ny div for å kontrollere innhold og padding */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between; /* Fordeler plass vertikalt */
+    width: 100%;
+    height: 100%; /* Tar opp hele plassen i .seat */
+    padding: 5px;
+    box-sizing: border-box; /* Inkluder padding i høyde/bredde */
+}
 
+/* --- Action Styling --- */
+.seat.seat-folded {
+    background-color: #ffebee;
+    opacity: 0.7;
+}
+.seat.seat-folded .player-cards {
+    opacity: 0.5;
+}
+.seat.seat-called {
+    background-color: #e3f2fd;
+}
+.seat.seat-raised, .seat.seat-3bet, .seat.seat-pushed {
+    background-color: #e8f5e9;
+}
+.seat.seat-posted-blind { }
+
+
+.player-info {
+     margin-bottom: 4px;
+}
 .player-name {
     font-weight: bold;
     font-size: 11px;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
     white-space: nowrap;
 }
 .player-position {
      font-style: italic;
      font-size: 10px;
      color: #555;
-     margin-bottom: 4px;
 }
 .player-action {
-    margin-top: auto; /* Skyver handlingen ned */
-    padding-top: 5px; /* Litt luft over handlingen */
+    /* margin-top: auto; Fjernet, justify-content: space-between tar seg av dette */
+    padding: 3px 0;
     font-size: 11px;
     font-weight: bold;
-    color: #dc3545; /* Mer tydelig rød */
     width: 100%;
-}
-.player-action span { /* For chip amount */
-    font-weight: normal;
+    line-height: 1.2;
     color: #333;
-    display: block; /* For linjeskift */
-    font-size: 10px;
-}
-.player-action.fold {
-    color: #6c757d; /* Grå for fold */
-}
-.player-action.call {
-    color: #007bff; /* Blå for call */
-}
-.player-action.raise, .player-action.push, .player-action.bet {
-    color: #28a745; /* Grønn for raise/bet */
+    min-height: 1.2em; /* Sikrer litt plass selv om teksten er tom */
 }
 
+/* Farger for handlingstekst */
+.player-action.action-fold { color: #dc3545; }
+.player-action.action-call { color: #007bff; }
+.player-action.action-raise,
+.player-action.action-3bet,
+.player-action.action-push { color: #28a745; }
+.player-action.action-post { color: #6c757d; }
 
-.player-cards { /* Ikke brukt for motstandere i V1, men klar */
-    display: flex;
-    justify-content: center;
-    gap: 2px;
-}
 
-.dealer-button {
-    position: absolute;
-    width: 25px;
-    height: 25px;
-    background-color: white;
-    color: black;
-    border: 2px solid black;
-    border-radius: 50%;
+.player-cards {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-weight: bold;
-    font-size: 14px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-    z-index: 10; /* Over setene */
-    /* Posisjon settes av JS */
-}
-.pot-display {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: rgba(0, 0, 0, 0.6);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 15px;
-    font-weight: 500;
-    z-index: 5;
-}
-.scenario-desc {
-     position: absolute;
-     top: 10px; /* Plassering over bordet */
-     left: 50%;
-     transform: translateX(-50%);
-     font-style: italic;
-     color: #555;
-     font-size: 14px;
-     background-color: rgba(255, 255, 255, 0.8);
-     padding: 3px 8px;
-     border-radius: 4px;
-}
-
-
-.hero-area {
-    text-align: center;
-    margin-bottom: 20px;
+    gap: 3px; /* Økt gap litt */
     width: 100%;
-}
-.hero-area h2 { margin-bottom: 10px; }
-
-.hero-cards {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 15px;
-    min-height: 95px; /* Matcher korthøyde */
+    min-height: 50px;
+    /* margin-top: 3px; Fjernet, space-between ordner */
 }
 
-.card {
-    width: 65px;
-    height: 95px;
+/* Kortstyling (for kort inni setet) */
+.player-cards .card {
+    width: 38px; /* Økt bredde litt */
+    height: 55px; /* Økt høyde litt */
     border: 1px solid #adb5bd;
-    border-radius: 6px;
-    margin: 0 5px;
+    border-radius: 4px;
     background-color: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -217,71 +199,137 @@ h3 {
     font-weight: bold;
     position: relative;
     box-sizing: border-box;
-    padding: 5px;
+    padding: 2px;
+    margin: 0;
 }
-.card.card-placeholder {
+.player-cards .card.card-placeholder {
     justify-content: center;
-    font-size: 40px;
+    font-size: 22px;
     color: #ccc;
 }
-.card.card-placeholder::before {
+.player-cards .card.card-placeholder::before {
      content: '?';
 }
 
-.card-rank {
+.player-cards .card-rank {
     position: absolute;
-    font-size: 18px; /* Litt større rank */
+    font-size: 11px; /* Økt */
     line-height: 1;
 }
-.card-suit {
-    font-size: 16px; /* Litt mindre suit i hjørnet */
+.player-cards .card-suit {
+    font-size: 9px; /* Økt */
 }
-.card-top-left { top: 6px; left: 6px; text-align: center;}
-.card-bottom-right { bottom: 6px; right: 6px; text-align: center; transform: rotate(180deg);}
+.player-cards .card-top-left { top: 3px; left: 3px; text-align: center;}
+.player-cards .card-bottom-right { bottom: 3px; right: 3px; text-align: center; transform: rotate(180deg);}
 
-.card-suit-center {
+.player-cards .card-suit-center {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 40px; /* Større midtsymbol */
+    font-size: 24px; /* Økt */
 }
 
-/* Farger for symboler */
 .spades, .clubs { color: black; }
 .hearts, .diamonds { color: red; }
 
+
+.dealer-button {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background: radial-gradient(circle, #ffffff 60%, #e0e0e0 100%);
+    color: #424242;
+    border: 2px solid #757575;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    z-index: 10;
+}
+.pot-display {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.65);
+    color: white;
+    padding: 8px 14px;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: 500;
+    z-index: 5;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.scenario-desc {
+     position: absolute;
+     top: 15px;
+     left: 50%;
+     transform: translateX(-50%);
+     font-style: italic;
+     color: #fff;
+     font-size: 14px;
+     background-color: rgba(0, 0, 0, 0.5);
+     padding: 4px 10px;
+     border-radius: 4px;
+     z-index: 15; /* Økt Z-INDEX */
+     text-align: center;
+     max-width: 80%; /* Forhindre at den blir for bred */
+}
+
+/* Hero Controls Area */
+.hero-controls {
+    text-align: center;
+    margin-bottom: 20px;
+    margin-top: 10px;
+    width: 100%;
+}
+.hero-controls h2 {
+    margin-bottom: 15px;
+    font-size: 1.4em;
+}
+#heroPosition { font-weight: bold; color: #d32f2f; }
+
 .action-buttons button {
     padding: 10px 20px;
-    margin: 0 10px;
+    margin: 5px 8px;
     font-size: 16px;
     cursor: pointer;
     border-radius: 5px;
     border: none;
-    transition: opacity 0.2s ease, background-color 0.2s ease;
+    transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.1s ease;
+    min-width: 80px;
 }
 .action-buttons button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    background-color: #ccc;
+    background-color: #bdbdbd;
+    color: #757575;
+}
+.action-buttons button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-.action-buttons button[data-action="F"] { background-color: #dc3545; color: white;} /* Rød */
-.action-buttons button[data-action="C"] { background-color: #007bff; color: white;} /* Blå */
-.action-buttons button[data-action="R"] { background-color: #28a745; color: white;} /* Grønn */
-.action-buttons button[data-action="3B"] { background-color: #ffc107; color: black;} /* Gul/Gull for 3bet */
-.action-buttons button[data-action="P"] { background-color: #17a2b8; color: white;} /* Cyan for Push */
+.action-buttons button[data-action="F"] { background-color: #f44336; color: white;}
+.action-buttons button[data-action="C"] { background-color: #2196F3; color: white;}
+.action-buttons button[data-action="R"] { background-color: #4CAF50; color: white;}
+.action-buttons button[data-action="3B"] { background-color: #FFC107; color: black;}
+.action-buttons button[data-action="P"] { background-color: #00BCD4; color: white;}
 
-.action-buttons button[data-action="F"]:hover:not(:disabled) { background-color: #c82333; }
-.action-buttons button[data-action="C"]:hover:not(:disabled) { background-color: #0056b3; }
-.action-buttons button[data-action="R"]:hover:not(:disabled) { background-color: #218838; }
-.action-buttons button[data-action="3B"]:hover:not(:disabled) { background-color: #e0a800; }
-.action-buttons button[data-action="P"]:hover:not(:disabled) { background-color: #138496; }
+.action-buttons button[data-action="F"]:hover:not(:disabled) { background-color: #d32f2f; }
+.action-buttons button[data-action="C"]:hover:not(:disabled) { background-color: #1976D2; }
+.action-buttons button[data-action="R"]:hover:not(:disabled) { background-color: #388E3C; }
+.action-buttons button[data-action="3B"]:hover:not(:disabled) { background-color: #FFA000; }
+.action-buttons button[data-action="P"]:hover:not(:disabled) { background-color: #0097A7; }
 
 .feedback-area {
-    margin-top: 20px;
-    padding: 15px;
-    background-color: #e9ecef; /* Lysere grå */
+    margin-top: 15px;
+    padding: 15px 20px;
+    background-color: #e9ecef;
     border: 1px solid #ced4da;
     border-radius: 5px;
     min-height: 50px;
@@ -292,88 +340,98 @@ h3 {
 }
 #feedbackText {
     font-weight: bold;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     font-size: 18px;
 }
-#feedbackText.correct { color: #28a745; } /* Grønn for korrekt */
-#feedbackText.incorrect { color: #dc3545; } /* Rød for feil */
+#feedbackText.correct { color: #388E3C; }
+#feedbackText.incorrect { color: #d32f2f; }
 
 #correctActionText {
     font-style: italic;
-    color: #495057; /* Mørkere grå */
+    color: #495057;
     font-size: 14px;
+    margin-bottom: 10px;
 }
 
 #rangeDisplayContainer {
-    margin-top: 20px;
+    margin-top: 15px;
     text-align: left;
     width: fit-content;
     margin-left: auto;
     margin-right: auto;
     border: 1px solid #ccc;
-    padding: 10px;
+    padding: 15px;
     background-color: #fff;
     border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 #rangeDisplayContainer h3 {
     margin-top: 0;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     font-size: 16px;
+    text-align: center;
 }
+#rangeSituationInfo { font-weight: normal; font-style: italic; }
 
 #rangeGrid {
     display: grid;
-    grid-template-columns: repeat(13, 38px); /* Justert litt */
-    grid-template-rows: repeat(13, 38px);
+    grid-template-columns: repeat(13, 36px);
+    grid-template-rows: repeat(13, 36px);
     gap: 1px;
     border: 1px solid #dee2e6;
     margin-bottom: 10px;
-    background-color: #dee2e6; /* Bakgrunn for grid-linjer */
+    background-color: #dee2e6;
 }
 
 .range-cell {
-    border: none; /* Fjerner individuell kantlinje */
+    border: none;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 10px; /* Litt mindre for bedre plass */
-    font-weight: 500; /* Litt lettere */
+    font-size: 10px;
+    font-weight: 500;
     cursor: default;
     background-color: #f8f9fa;
     position: relative;
     color: #343a40;
     box-sizing: border-box;
-    line-height: 1.1; /* Hjelper på tekstbryting */
-    word-break: break-all; /* For AA, KK etc. */
+    line-height: 1.1;
+    word-break: break-all;
+    transition: transform 0.1s ease;
+}
+.range-cell:hover {
+    transform: scale(1.1);
+    z-index: 1;
+    box-shadow: 0 0 5px rgba(0,0,0,0.3);
 }
 
-/* Fargekoding for range grid */
-.range-raise { background-color: #aaffaa; } /* Klarere grønn */
-.range-call { background-color: #cfe2ff; } /* Klarere blå */
-.range-fold { background-color: #ffcccc; } /* Klarere rød */
-.range-mixed { background-color: #fffacd; } /* Lys sitron */
 
-/* Tooltip */
+.range-raise { background-color: #c8e6c9; }
+.range-call { background-color: #bbdefb; }
+.range-fold { background-color: #ffcdd2; }
+.range-mixed { background-color: #fff9c4; }
+
 .range-cell .tooltiptext {
   visibility: hidden;
-  min-width: 100px; /* Minimum bredde */
-  background-color: #555; /* Mørkere grå */
+  min-width: 110px;
+  background-color: #424242;
   color: #fff;
   text-align: center;
   border-radius: 5px;
-  padding: 6px 8px;
+  padding: 7px 9px;
   position: absolute;
-  z-index: 10;
-  bottom: 115%; /* Litt høyere opp */
+  z-index: 20;
+  bottom: 120%;
   left: 50%;
-  margin-left: -50px; /* Halvparten av min-width */
+  transform: translateX(-50%);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
   font-size: 11px;
   font-weight: normal;
-  white-space: pre; /* Bevar linjeskift fra \n */
+  white-space: pre-line;
+  pointer-events: none;
 }
-.range-cell .tooltiptext::after { /* Pil for tooltip */
+.range-cell .tooltiptext::after {
   content: "";
   position: absolute;
   top: 100%;
@@ -381,13 +439,14 @@ h3 {
   margin-left: -5px;
   border-width: 5px;
   border-style: solid;
-  border-color: #555 transparent transparent transparent;
+  border-color: #424242 transparent transparent transparent;
 }
 
 
 .range-cell:hover .tooltiptext {
   visibility: visible;
-  opacity: 0.95; /* Litt gjennomsiktig */
+  opacity: 0.95;
+  transition: opacity 0.3s ease;
 }
 
 .legend {
@@ -397,13 +456,14 @@ h3 {
 }
 .legend span {
     display: inline-block;
-    padding: 3px 9px;
-    margin: 2px 4px;
-    border-radius: 3px;
-    color: black;
-    border: 1px solid #ccc;
+    padding: 4px 10px;
+    margin: 3px 5px;
+    border-radius: 4px;
+    color: #424242;
+    border: 1px solid #bdbdbd;
+    font-weight: 500;
 }
-.legend-raise { background-color: #aaffaa; }
-.legend-call { background-color: #cfe2ff; }
-.legend-fold { background-color: #ffcccc; }
-.legend-mixed { background-color: #fffacd; }
+.legend-raise { background-color: #c8e6c9; }
+.legend-call { background-color: #bbdefb; }
+.legend-fold { background-color: #ffcdd2; }
+.legend-mixed { background-color: #fff9c4; }
