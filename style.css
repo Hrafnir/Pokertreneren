@@ -1,108 +1,147 @@
 body {
-    font-family: sans-serif;
-    background-color: #f0f0f0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f4f4;
     color: #333;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
+    padding: 15px;
+    line-height: 1.5;
 }
 
 h1, h2 {
-    color: #1a4d2e; /* Mørk grønn */
+    color: #2c5d3d; /* Dypere grønn */
+    text-align: center;
+}
+h3 {
+    margin-bottom: 5px;
+    text-align: center;
+    color: #444;
 }
 
 .controls {
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     background-color: #fff;
-    padding: 15px;
+    padding: 15px 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
 }
 
 .controls label {
     margin-right: 5px;
+    font-weight: 500;
 }
 .controls select, .controls button {
-    margin-right: 15px;
     padding: 8px 12px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    font-size: 14px;
 }
 .controls button {
-    background-color: #4CAF50; /* Grønn knapp */
+    background-color: #007bff; /* Blå knapp */
     color: white;
     cursor: pointer;
     border: none;
+    transition: background-color 0.2s ease;
 }
 .controls button:hover {
-    background-color: #45a049;
+    background-color: #0056b3;
 }
-
 
 .table-container {
     margin-bottom: 20px;
-    position: relative; /* For positioning seats and button */
-    width: 600px; /* Juster etter behov */
-    height: 350px; /* Juster etter behov */
+    position: relative;
+    width: 90%;
+    max-width: 700px; /* Maks bredde */
+    aspect-ratio: 1.8 / 1; /* Forhold bredde/høyde */
+    min-height: 300px; /* Minimum høyde */
 }
 
 .poker-table {
     width: 100%;
     height: 100%;
-    background-color: #2a6a3d; /* Pokerbord-grønn */
-    border-radius: 50%; /* Oval form */
-    border: 10px solid #8b4513; /* Trebord-kant */
-    position: relative;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    background-color: #2e7d32; /* Klassisk pokerbord-grønn */
+    border-radius: 50% / 50%; /* Mer presis oval */
+    border: 12px solid #6d4c41; /* Mørkere trebord-kant */
+    position: absolute; /* Endret til absolutt */
+    top: 0;
+    left: 0;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.3);
 }
 
 .seat {
     position: absolute;
-    width: 80px;
-    height: 100px;
-    background-color: #eee;
-    border: 1px solid #aaa;
+    width: 75px; /* Litt smalere */
+    height: 95px;
+    background-color: #f8f9fa;
+    border: 1px solid #adb5bd;
     border-radius: 5px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between; /* Plasserer innhold */
-    padding: 5px;
+    justify-content: flex-start; /* Start øverst */
+    padding: 4px;
     box-sizing: border-box;
     font-size: 10px;
     text-align: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    transform: translate(-50%, -50%); /* Sentrering basert på top/left */
 }
 .seat.hero-seat {
-    border: 3px solid gold;
-    background-color: #fffacd; /* Lysere for Hero */
+    border: 3px solid #ffc107; /* Gull */
+    background-color: #fffde7; /* Veldig lys gul */
 }
+.seat.action-on { /* Klasse for å markere hvem som har handlingen */
+     box-shadow: 0 0 10px 3px #ffc107;
+}
+
 
 .player-name {
     font-weight: bold;
-    margin-bottom: 2px; /* Litt luft */
+    font-size: 11px;
+    margin-bottom: 2px;
+    white-space: nowrap;
 }
 .player-position {
      font-style: italic;
+     font-size: 10px;
      color: #555;
      margin-bottom: 4px;
 }
 .player-action {
-    margin-top: 4px;
+    margin-top: auto; /* Skyver handlingen ned */
+    padding-top: 5px; /* Litt luft over handlingen */
     font-size: 11px;
     font-weight: bold;
-    color: #d9534f; /* Rød for actions? */
+    color: #dc3545; /* Mer tydelig rød */
+    width: 100%;
 }
 .player-action span { /* For chip amount */
     font-weight: normal;
     color: #333;
+    display: block; /* For linjeskift */
+    font-size: 10px;
+}
+.player-action.fold {
+    color: #6c757d; /* Grå for fold */
+}
+.player-action.call {
+    color: #007bff; /* Blå for call */
+}
+.player-action.raise, .player-action.push, .player-action.bet {
+    color: #28a745; /* Grønn for raise/bet */
 }
 
-.player-cards {
+
+.player-cards { /* Ikke brukt for motstandere i V1, men klar */
     display: flex;
     justify-content: center;
-    gap: 2px; /* Liten avstand mellom kort */
+    gap: 2px;
 }
 
 .dealer-button {
@@ -119,64 +158,98 @@ h1, h2 {
     font-weight: bold;
     font-size: 14px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    z-index: 10; /* Over setene */
+    /* Posisjon settes av JS */
 }
 .pot-display {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.6);
     color: white;
-    padding: 5px 10px;
+    padding: 6px 12px;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 15px;
+    font-weight: 500;
+    z-index: 5;
 }
+.scenario-desc {
+     position: absolute;
+     top: 10px; /* Plassering over bordet */
+     left: 50%;
+     transform: translateX(-50%);
+     font-style: italic;
+     color: #555;
+     font-size: 14px;
+     background-color: rgba(255, 255, 255, 0.8);
+     padding: 3px 8px;
+     border-radius: 4px;
+}
+
 
 .hero-area {
     text-align: center;
     margin-bottom: 20px;
+    width: 100%;
 }
+.hero-area h2 { margin-bottom: 10px; }
 
 .hero-cards {
     display: flex;
     justify-content: center;
     margin-bottom: 15px;
-    min-height: 90px; /* Sørger for plass selv uten kort */
+    min-height: 95px; /* Matcher korthøyde */
 }
 
 .card {
-    width: 60px;
-    height: 90px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    width: 65px;
+    height: 95px;
+    border: 1px solid #adb5bd;
+    border-radius: 6px;
     margin: 0 5px;
     background-color: white;
-    background-size: cover;
-    background-position: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    display: flex; /* For placeholder */
-    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
-    font-size: 24px; /* For placeholder symbol */
+    font-weight: bold;
+    position: relative;
+    box-sizing: border-box;
+    padding: 5px;
+}
+.card.card-placeholder {
+    justify-content: center;
+    font-size: 40px;
     color: #ccc;
 }
-.card-placeholder::before {
-    content: '?'; /* Eller et annet symbol */
+.card.card-placeholder::before {
+     content: '?';
 }
 
-/* Eksempel på kort-styling (krever faktiske bilder) */
-.card.AS { background-image: url('cards/AS.png'); }
-.card.KH { background-image: url('cards/KH.png'); }
-/* ... legg til klasser for alle 52 kort ... */
-/* Alternativ: Bruk unicode tekst for kort */
-.card-text {
-    font-size: 40px; /* Juster etter behov */
-    line-height: 90px; /* Sentrerer vertikalt */
-    text-align: center;
+.card-rank {
+    position: absolute;
+    font-size: 18px; /* Litt større rank */
+    line-height: 1;
 }
+.card-suit {
+    font-size: 16px; /* Litt mindre suit i hjørnet */
+}
+.card-top-left { top: 6px; left: 6px; text-align: center;}
+.card-bottom-right { bottom: 6px; right: 6px; text-align: center; transform: rotate(180deg);}
+
+.card-suit-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 40px; /* Større midtsymbol */
+}
+
+/* Farger for symboler */
 .spades, .clubs { color: black; }
 .hearts, .diamonds { color: red; }
-
 
 .action-buttons button {
     padding: 10px 20px;
@@ -185,88 +258,136 @@ h1, h2 {
     cursor: pointer;
     border-radius: 5px;
     border: none;
+    transition: opacity 0.2s ease, background-color 0.2s ease;
 }
-.action-buttons button[data-action="F"] { background-color: #f44336; color: white;} /* Rød */
-.action-buttons button[data-action="C"] { background-color: #2196F3; color: white;} /* Blå */
-.action-buttons button[data-action="R"] { background-color: #4CAF50; color: white;} /* Grønn */
+.action-buttons button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #ccc;
+}
+
+.action-buttons button[data-action="F"] { background-color: #dc3545; color: white;} /* Rød */
+.action-buttons button[data-action="C"] { background-color: #007bff; color: white;} /* Blå */
+.action-buttons button[data-action="R"] { background-color: #28a745; color: white;} /* Grønn */
+.action-buttons button[data-action="3B"] { background-color: #ffc107; color: black;} /* Gul/Gull for 3bet */
+.action-buttons button[data-action="P"] { background-color: #17a2b8; color: white;} /* Cyan for Push */
+
+.action-buttons button[data-action="F"]:hover:not(:disabled) { background-color: #c82333; }
+.action-buttons button[data-action="C"]:hover:not(:disabled) { background-color: #0056b3; }
+.action-buttons button[data-action="R"]:hover:not(:disabled) { background-color: #218838; }
+.action-buttons button[data-action="3B"]:hover:not(:disabled) { background-color: #e0a800; }
+.action-buttons button[data-action="P"]:hover:not(:disabled) { background-color: #138496; }
 
 .feedback-area {
     margin-top: 20px;
     padding: 15px;
-    background-color: #e9e9e9;
+    background-color: #e9ecef; /* Lysere grå */
+    border: 1px solid #ced4da;
     border-radius: 5px;
     min-height: 50px;
-    width: 80%;
+    width: 90%;
     max-width: 800px;
     text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 #feedbackText {
     font-weight: bold;
     margin-bottom: 5px;
+    font-size: 18px;
 }
+#feedbackText.correct { color: #28a745; } /* Grønn for korrekt */
+#feedbackText.incorrect { color: #dc3545; } /* Rød for feil */
+
 #correctActionText {
     font-style: italic;
-    color: #333;
+    color: #495057; /* Mørkere grå */
+    font-size: 14px;
 }
 
 #rangeDisplayContainer {
     margin-top: 20px;
-    text-align: left; /* Justerer innholdet i containeren */
-    width: fit-content; /* Tilpasser bredden til gridet */
-    margin-left: auto; /* Sentrerer containeren */
+    text-align: left;
+    width: fit-content;
+    margin-left: auto;
     margin-right: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 5px;
+}
+#rangeDisplayContainer h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 16px;
 }
 
 #rangeGrid {
     display: grid;
-    grid-template-columns: repeat(13, 40px); /* Juster størrelse etter behov */
-    grid-template-rows: repeat(13, 40px);    /* Juster størrelse etter behov */
+    grid-template-columns: repeat(13, 38px); /* Justert litt */
+    grid-template-rows: repeat(13, 38px);
     gap: 1px;
-    border: 1px solid #ccc;
-    margin-bottom: 10px; /* Luft under gridet */
+    border: 1px solid #dee2e6;
+    margin-bottom: 10px;
+    background-color: #dee2e6; /* Bakgrunn for grid-linjer */
 }
 
 .range-cell {
-    border: 1px solid #eee;
+    border: none; /* Fjerner individuell kantlinje */
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 11px;
-    font-weight: bold;
-    cursor: default; /* Ikke klikkbar som standard */
-    background-color: #f8f8f8; /* Default */
-    position: relative; /* For tooltips */
+    font-size: 10px; /* Litt mindre for bedre plass */
+    font-weight: 500; /* Litt lettere */
+    cursor: default;
+    background-color: #f8f9fa;
+    position: relative;
+    color: #343a40;
+    box-sizing: border-box;
+    line-height: 1.1; /* Hjelper på tekstbryting */
+    word-break: break-all; /* For AA, KK etc. */
 }
 
 /* Fargekoding for range grid */
-.range-raise { background-color: #90EE90; } /* Lys grønn */
-.range-call { background-color: #ADD8E6; } /* Lys blå */
-.range-fold { background-color: #FFB6C1; } /* Lys rød */
-.range-mixed { background-color: #FFFFE0; } /* Lys gul */
+.range-raise { background-color: #aaffaa; } /* Klarere grønn */
+.range-call { background-color: #cfe2ff; } /* Klarere blå */
+.range-fold { background-color: #ffcccc; } /* Klarere rød */
+.range-mixed { background-color: #fffacd; } /* Lys sitron */
 
-/* Tooltip (enkel implementering) */
+/* Tooltip */
 .range-cell .tooltiptext {
   visibility: hidden;
-  width: 120px;
-  background-color: black;
+  min-width: 100px; /* Minimum bredde */
+  background-color: #555; /* Mørkere grå */
   color: #fff;
   text-align: center;
-  border-radius: 6px;
-  padding: 5px 0;
+  border-radius: 5px;
+  padding: 6px 8px;
   position: absolute;
-  z-index: 1;
-  bottom: 125%; /* Plasser over cellen */
+  z-index: 10;
+  bottom: 115%; /* Litt høyere opp */
   left: 50%;
-  margin-left: -60px; /* Halvparten av bredden for sentrering */
+  margin-left: -50px; /* Halvparten av min-width */
   opacity: 0;
-  transition: opacity 0.3s;
-  font-size: 10px;
+  transition: opacity 0.3s ease;
+  font-size: 11px;
   font-weight: normal;
+  white-space: pre; /* Bevar linjeskift fra \n */
 }
+.range-cell .tooltiptext::after { /* Pil for tooltip */
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
 
 .range-cell:hover .tooltiptext {
   visibility: visible;
-  opacity: 1;
+  opacity: 0.95; /* Litt gjennomsiktig */
 }
 
 .legend {
@@ -276,34 +397,13 @@ h1, h2 {
 }
 .legend span {
     display: inline-block;
-    padding: 2px 8px;
-    margin: 0 5px;
+    padding: 3px 9px;
+    margin: 2px 4px;
     border-radius: 3px;
     color: black;
     border: 1px solid #ccc;
 }
-.legend-raise { background-color: #90EE90; }
-.legend-call { background-color: #ADD8E6; }
-.legend-fold { background-color: #FFB6C1; }
-.legend-mixed { background-color: #FFFFE0; }
-
-/* Seat Positioning (Example for 9-max) */
-/* Juster top/left prosentandeler for å plassere rundt bordet */
-.seat[data-seat-id="0"] { top: 75%; left: 50%; transform: translateX(-50%); } /* Hero (Bottom) */
-.seat[data-seat-id="1"] { top: 55%; left: 15%; transform: translateY(-50%); } /* SB */
-.seat[data-seat-id="2"] { top: 25%; left: 15%; transform: translateY(-50%); } /* BB */
-.seat[data-seat-id="3"] { top: 5%; left: 30%; transform: translateX(-50%); }  /* UTG */
-.seat[data-seat-id="4"] { top: 0%; left: 50%; transform: translateX(-50%); }  /* UTG+1 */
-.seat[data-seat-id="5"] { top: 5%; left: 70%; transform: translateX(-50%); }  /* MP */
-.seat[data-seat-id="6"] { top: 25%; left: 85%; transform: translateY(-50%); } /* HJ */
-.seat[data-seat-id="7"] { top: 55%; left: 85%; transform: translateY(-50%); } /* CO */
-.seat[data-seat-id="8"] { top: 75%; left: 70%; transform: translateX(-50%); } /* BTN */
-
-/* Seat Positioning (Example for 6-max) */
-/* Du må justere disse hvis 6-max velges */
-/* .seat[data-seat-id="0"] { top: 75%; left: 50%; transform: translateX(-50%); } /* Hero (BTN) */
-/* .seat[data-seat-id="1"] { top: 55%; left: 15%; transform: translateY(-50%); } /* SB */
-/* .seat[data-seat-id="2"] { top: 25%; left: 15%; transform: translateY(-50%); } /* BB */
-/* .seat[data-seat-id="3"] { top: 5%; left: 35%; transform: translateX(-50%); }  /* UTG */
-/* .seat[data-seat-id="4"] { top: 5%; left: 65%; transform: translateX(-50%); }  /* MP/HJ */
-/* .seat[data-seat-id="5"] { top: 55%; left: 85%; transform: translateY(-50%); } /* CO */
+.legend-raise { background-color: #aaffaa; }
+.legend-call { background-color: #cfe2ff; }
+.legend-fold { background-color: #ffcccc; }
+.legend-mixed { background-color: #fffacd; }
