@@ -8,9 +8,10 @@ h3 { margin-bottom: 5px; text-align: center; color: #444; }
 .controls label { margin-right: 5px; font-weight: 500; }
 .controls select, .controls input, .controls button { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; vertical-align: middle; }
 .controls input[type="number"] { width: 50px; }
+.controls input[type="checkbox"] { width: auto; margin-left: -5px; margin-right: 10px;} /* Styling for checkbox */
 .controls button { background-color: #007bff; color: white; cursor: pointer; border: none; } .controls button:hover { background-color: #0056b3; }
 .table-container { margin-bottom: 45px; position: relative; width: 90%; max-width: 750px; aspect-ratio: 1.8 / 1; min-height: 350px; }
-.poker-table { width: 100%; height: 100%; background-color: #2e7d32; border-radius: 50% / 50%; border: 15px solid #8d6e63; position: absolute; top: 0; left: 0; box-shadow: inset 0 0 25px rgba(0,0,0,0.4), 0 6px 18px rgba(0,0,0,0.3); } /* Fjernet display flex */
+.poker-table { width: 100%; height: 100%; background-color: #2e7d32; border-radius: 50% / 50%; border: 15px solid #8d6e63; position: absolute; top: 0; left: 0; box-shadow: inset 0 0 25px rgba(0,0,0,0.4), 0 6px 18px rgba(0,0,0,0.3); }
 
 .seat { position: absolute; width: 85px; height: 105px; background-color: #f8f9fa; border: 1px solid #adb5bd; border-radius: 6px; display: flex; justify-content: center; align-items: center; padding: 0; box-sizing: border-box; font-size: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transform: translate(-50%, -50%); transition: background-color 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease; overflow: hidden; }
 .seat.hero-seat { border: 3px solid #ffc107; background-color: #fffde7; min-width: 160px; min-height: 120px; overflow: visible; padding: 0; z-index: 5; box-shadow: 0 3px 6px rgba(0,0,0,0.25); }
@@ -33,64 +34,37 @@ h3 { margin-bottom: 5px; text-align: center; color: #444; }
 .hearts .card-rank-overlay, .hearts .card-suit-center, .diamonds .card-rank-overlay, .diamonds .card-suit-center { color: red; }
 
 .dealer-button { position: absolute; width: 30px; height: 30px; background: radial-gradient(circle, #ffffff 60%, #e0e0e0 100%); color: #424242; border: 2px solid #757575; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); z-index: 10; }
-
-/* Pot flyttet */
-.pot-display {
-    position: absolute;
-    top: 10px; /* Nær toppen */
-    left: 10px; /* Nær venstre */
-    transform: none; /* Fjern sentrering */
-    background-color: rgba(0, 0, 0, 0.6);
-    color: white;
-    padding: 4px 8px; /* Mindre padding */
-    border-radius: 4px;
-    font-size: 12px; /* Mindre tekst */
-    font-weight: 500;
-    z-index: 5;
-}
-/* Scenario-beskrivelse flyttet til midten */
-.scenario-desc {
-     position: absolute;
-     top: 50%; left: 50%; transform: translate(-50%, -50%); /* Sentrert */
-     font-style: normal; /* Ikke italic lenger? */
-     font-weight: 500;
-     color: #fff;
-     font-size: 18px; /* Større font */
-     background-color: rgba(0, 0, 0, 0.7); /* Litt mørkere for kontrast */
-     padding: 8px 15px; /* Mer padding */
-     border-radius: 5px;
-     z-index: 15; text-align: center; max-width: 70%;
-     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-}
-
+.pot-display { position: absolute; top: 10px; left: 10px; transform: none; background-color: rgba(0, 0, 0, 0.6); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; z-index: 5; }
+.scenario-desc { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-style: normal; font-weight: 500; color: #fff; font-size: 18px; background-color: rgba(0, 0, 0, 0.7); padding: 8px 15px; border-radius: 5px; z-index: 15; text-align: center; max-width: 70%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
 .hero-controls { text-align: center; margin-bottom: 20px; margin-top: 10px; width: 100%; } .hero-controls h2 { margin-bottom: 15px; font-size: 1.4em; } #heroPosition { font-weight: bold; color: #d32f2f; }
 .action-buttons button { padding: 10px 20px; margin: 5px 8px; font-size: 16px; cursor: pointer; border-radius: 5px; border: none; transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.1s ease; min-width: 80px; } .action-buttons button:disabled { opacity: 0.5; cursor: not-allowed; background-color: #bdbdbd; color: #757575; } .action-buttons button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.2); } .action-buttons button[data-action="F"] { background-color: #f44336; color: white;} .action-buttons button[data-action="C"] { background-color: #2196F3; color: white;} .action-buttons button[data-action="R"] { background-color: #4CAF50; color: white;} .action-buttons button[data-action="3B"] { background-color: #FFC107; color: black;} .action-buttons button[data-action="P"] { background-color: #00BCD4; color: white;} .action-buttons button[data-action="F"]:hover:not(:disabled) { background-color: #d32f2f; } .action-buttons button[data-action="C"]:hover:not(:disabled) { background-color: #1976D2; } .action-buttons button[data-action="R"]:hover:not(:disabled) { background-color: #388E3C; } .action-buttons button[data-action="3B"]:hover:not(:disabled) { background-color: #FFA000; } .action-buttons button[data-action="P"]:hover:not(:disabled) { background-color: #0097A7; }
 .feedback-area { margin-top: 15px; padding: 15px 20px; background-color: #e9ecef; border: 1px solid #ced4da; border-radius: 5px; min-height: 50px; width: 90%; max-width: 800px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 #feedbackText { font-weight: bold; margin-bottom: 8px; font-size: 18px; } #feedbackText.correct { color: #388E3C; } #feedbackText.incorrect { color: #d32f2f; } #correctActionText { font-style: italic; color: #495057; font-size: 14px; margin-bottom: 10px; }
 #rangeDisplayContainer { margin-top: 15px; text-align: left; width: fit-content; margin-left: auto; margin-right: auto; border: 1px solid #ccc; padding: 15px; background-color: #fff; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-#rangeDisplayContainer h3 { margin-top: 0; margin-bottom: 12px; font-size: 16px; text-align: center; } #rangeSituationInfo { font-weight: normal; font-style: italic; }
-#rangeGrid { display: grid; grid-template-columns: repeat(13, 36px); grid-template-rows: repeat(13, 36px); gap: 1px; border: 1px solid #dee2e6; margin-bottom: 10px; background-color: #dee2e6; }
-
-.range-cell { /* Som V12 */
-    border: none; display: flex; justify-content: center; align-items: center; font-size: 10px; font-weight: 500; cursor: default; background-color: #f8f9fa; position: relative; color: #343a40; box-sizing: border-box; line-height: 1.1; word-break: break-all; transition: transform 0.1s ease, box-shadow 0.3s ease, outline 0.3s ease;
-    border-radius: 4px; box-shadow: inset 0 0 1px rgba(0,0,0,0.1), 0 1px 1px rgba(0,0,0,0.1); outline: 2px solid transparent; /* For highlight */ outline-offset: -2px;
+#rangeDisplayContainer h3 { margin-top: 0; margin-bottom: 8px; font-size: 16px; text-align: center; } /* Mindre margin */
+#rangeSituationInfo { font-weight: normal; font-style: italic; }
+/* NYTT: Range navigasjonsknapper */
+.range-nav-buttons { text-align: center; margin-bottom: 10px; }
+.range-nav-buttons button {
+    padding: 4px 10px; margin: 0 5px; font-size: 12px;
+    background-color: #f0f0f0; border: 1px solid #ccc; border-radius: 3px; cursor: pointer;
 }
+.range-nav-buttons button:disabled { opacity: 0.5; cursor: not-allowed; }
+.range-nav-buttons button:hover:not(:disabled) { background-color: #e0e0e0; }
+
+#rangeGrid { display: grid; grid-template-columns: repeat(13, 36px); grid-template-rows: repeat(13, 36px); gap: 1px; border: 1px solid #dee2e6; margin-bottom: 10px; background-color: #dee2e6; }
+.range-cell { /* Som V12 */ border: none; display: flex; justify-content: center; align-items: center; font-size: 10px; font-weight: 500; cursor: default; background-color: #f8f9fa; position: relative; color: #343a40; box-sizing: border-box; line-height: 1.1; word-break: break-all; transition: transform 0.1s ease, box-shadow 0.3s ease, outline 0.3s ease; border-radius: 4px; box-shadow: inset 0 0 1px rgba(0,0,0,0.1), 0 1px 1px rgba(0,0,0,0.1); outline: 3px solid transparent; outline-offset: -3px; /* For highlight */ }
 .range-cell:hover { transform: scale(1.1); z-index: 1; box-shadow: 0 0 5px rgba(0,0,0,0.3); }
 .range-raise { background-color: #c8e6c9; } .range-call { background-color: #bbdefb; } .range-fold { background-color: #ffcdd2; } .range-mixed { background-color: #fff9c4; }
-.range-cell .tooltiptext { visibility: hidden; min-width: 110px; background-color: #424242; color: #fff; text-align: center; border-radius: 5px; padding: 7px 9px; position: absolute; z-index: 20; bottom: 120%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s ease, visibility 0s linear 0.3s; font-size: 11px; font-weight: normal; white-space: pre-line; pointer-events: none; }
-.range-cell .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #424242 transparent transparent transparent; }
+.range-cell .tooltiptext { /* ... (uendret) ... */ visibility: hidden; min-width: 110px; background-color: #424242; color: #fff; text-align: center; border-radius: 5px; padding: 7px 9px; position: absolute; z-index: 20; bottom: 120%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s ease, visibility 0s linear 0.3s; font-size: 11px; font-weight: normal; white-space: pre-line; pointer-events: none; }
+.range-cell .tooltiptext::after { /* ... (uendret) ... */ content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #424242 transparent transparent transparent; }
 .range-cell:hover .tooltiptext { visibility: visible; opacity: 0.95; transition: opacity 0.3s ease; }
 
-/* NYTT/ENDRET: Highlighting med outline */
+/* ENDRET: Highlighting med outline */
 .range-cell.highlight-hand {
-  outline: 3px solid gold; /* Tydelig gullkant */
+  outline-color: #FFD700; /* Tydelig gullkant */
   z-index: 2; /* Sørg for at den er over andre celler */
 }
 
-.legend { margin-top: 10px; text-align: center; font-size: 12px; }
-.legend span { display: inline-block; padding: 4px 10px; margin: 3px 5px; border-radius: 4px; color: #424242; border: 1px solid #bdbdbd; font-weight: 500; }
-.legend-raise { background-color: #c8e6c9; } .legend-call { background-color: #bbdefb; } .legend-fold { background-color: #ffcdd2; } .legend-mixed { background-color: #fff9c4; }
-.stats-area { /* ... (uendret) ... */ margin-top: 30px; padding: 20px; background-color: #e9ecef; border: 1px solid #ced4da; border-radius: 8px; width: 90%; max-width: 800px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-.stats-area h2 { margin-bottom: 15px; text-align: center; color: #495057; }
-#statsTable { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; } #statsTable th, #statsTable td { border: 1px solid #ced4da; padding: 8px 12px; text-align: left; } #statsTable th { background-color: #dee2e6; font-weight: 600; } #statsTable tbody tr:nth-child(even) { background-color: #f8f9fa; } #statsTable td:nth-child(n+2) { text-align: right; } #statsTable tbody tr:last-child { font-weight: bold; background-color: #e2e6ea; }
-#resetStatsBtn { display: block; margin: 10px auto 0 auto; padding: 8px 16px; font-size: 13px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.2s ease; } #resetStatsBtn:hover { background-color: #c82333; }
+.legend { margin-top: 10px; text-align: center; font-size: 12px; } .legend span { display: inline-block; padding: 4px 10px; margin: 3px 5px; border-radius: 4px; color: #424242; border: 1px solid #bdbdbd; font-weight: 500; } .legend-raise { background-color: #c8e6c9; } .legend-call { background-color: #bbdefb; } .legend-fold { background-color: #ffcdd2; } .legend-mixed { background-color: #fff9c4; }
+.stats-area { /* ... (uendret) ... */ margin-top: 30px; padding: 20px; background-color: #e9ecef; border: 1px solid #ced4da; border-radius: 8px; width: 90%; max-width: 800px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); } .stats-area h2 { margin-bottom: 15px; text-align: center; color: #495057; } #statsTable { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; } #statsTable th, #statsTable td { border: 1px solid #ced4da; padding: 8px 12px; text-align: left; } #statsTable th { background-color: #dee2e6; font-weight: 600; } #statsTable tbody tr:nth-child(even) { background-color: #f8f9fa; } #statsTable td:nth-child(n+2) { text-align: right; } #statsTable tbody tr:last-child { font-weight: bold; background-color: #e2e6ea; } #resetStatsBtn { display: block; margin: 10px auto 0 auto; padding: 8px 16px; font-size: 13px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.2s ease; } #resetStatsBtn:hover { background-color: #c82333; }
