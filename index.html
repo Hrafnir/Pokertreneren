@@ -3,19 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poker Pre-flop Trainer V2.5</title> <!-- Oppdatert tittel -->
+    <title>Poker Pre-flop Trainer V2.5</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Poker Pre-flop GTO Trainer V2.5</h1> <!-- Oppdatert tittel -->
+    <h1>Poker Pre-flop GTO Trainer V2.5</h1>
+
+    <!-- NY: Scenario Valg -->
+    <div class="scenario-buttons">
+        <button class="scenario-btn" data-scenario-type="6max_cash">6-max Cash</button>
+        <button class="scenario-btn" data-scenario-type="6max_tourney">6-max Tourney</button>
+        <button class="scenario-btn" data-scenario-type="9max_tourney" selected>9-max Tourney</button>
+    </div>
 
     <div class="controls">
-        <label for="gameType">Bord:</label>
-        <select id="gameType">
-            <option value="9max" selected>9-max</option>
-            <option value="6max">6-max</option>
-        </select>
-
+        <!-- Fjernet Bord dropdown -->
         <label for="stackDepth">Stack (BB):</label>
         <select id="stackDepth">
             <option value="40bb" selected>40 BB</option>
@@ -75,7 +77,7 @@
         </div>
     </div>
 
-    <!-- NYTT: Statistikk Område -->
+    <!-- Statistikk Område -->
     <div id="statsArea" class="stats-area">
         <h2>Statistikk (Lagres lokalt)</h2>
         <table id="statsTable">
@@ -88,9 +90,7 @@
                     <th>% Riktig</th>
                 </tr>
             </thead>
-            <tbody>
-                <!-- Rader genereres av JS -->
-            </tbody>
+            <tbody></tbody>
         </table>
         <button id="resetStatsBtn">Nullstill Statistikk</button>
     </div>
