@@ -48,90 +48,32 @@ h3 {
     display: flex; justify-content: center; align-items: center;
 }
 
-.seat {
-    position: absolute;
-    width: 85px;
-    height: 105px;
-    background-color: #f8f9fa;
-    border: 1px solid #adb5bd;
-    border-radius: 6px; /* Litt mer avrundet */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0;
-    box-sizing: border-box;
-    font-size: 10px;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* LAGT TIL SKYGGE */
-    transform: translate(-50%, -50%);
-    transition: background-color 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
-    overflow: hidden;
+.seat { /* ... (uendret fra V12) ... */
+    position: absolute; width: 85px; height: 105px; background-color: #f8f9fa; border: 1px solid #adb5bd; border-radius: 6px; display: flex; justify-content: center; align-items: center; padding: 0; box-sizing: border-box; font-size: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transform: translate(-50%, -50%); transition: background-color 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease; overflow: hidden;
 }
-.seat.hero-seat {
-    border: 3px solid #ffc107;
-    background-color: #fffde7;
-    min-width: 160px;
-    min-height: 120px;
-    overflow: visible;
-    padding: 0;
-    z-index: 5;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.25); /* Litt tydeligere skygge for hero */
+.seat.hero-seat { /* ... (uendret fra V12) ... */
+    border: 3px solid #ffc107; background-color: #fffde7; min-width: 160px; min-height: 120px; overflow: visible; padding: 0; z-index: 5; box-shadow: 0 3px 6px rgba(0,0,0,0.25);
 }
-.seat.action-on {
-     box-shadow: 0 0 12px 4px #ffc107; /* Behold glød */
-     border-color: #ffa000;
-     z-index: 6; /* Legg over andre seter når det er action */
+.seat.action-on { /* ... (uendret fra V12) ... */
+     box-shadow: 0 0 12px 4px #ffc107; border-color: #ffa000; z-index: 6;
 }
-
-.seat-content { /* ... (uendret) ... */
-    display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-    width: 100%; height: 100%; padding: 5px; box-sizing: border-box;
-}
-.hero-seat .seat-content { /* ... (uendret) ... */
-    padding: 8px; justify-content: center; min-height: 120px;
-}
-
-
+.seat-content { /* ... (uendret fra V12) ... */ display: flex; flex-direction: column; align-items: center; justify-content: space-between; width: 100%; height: 100%; padding: 5px; box-sizing: border-box; }
+.hero-seat .seat-content { /* ... (uendret fra V12) ... */ padding: 8px; justify-content: center; min-height: 120px; }
 /* --- Action Styling for Seats --- */
-.seat.seat-folded { background-color: #ffebee; opacity: 0.7; box-shadow: 0 1px 2px rgba(0,0,0,0.15); /* Mindre skygge når foldet */}
-.seat.seat-called { background-color: #e3f2fd; }
-.seat.seat-raised, .seat.seat-3bet, .seat.seat-pushed { background-color: #e8f5e9; }
-.seat.seat-posted-blind { box-shadow: 0 1px 2px rgba(0,0,0,0.15); /* Mindre skygge for blinds */ }
+.seat.seat-folded { background-color: #ffebee; opacity: 0.7; box-shadow: 0 1px 2px rgba(0,0,0,0.15); } .seat.seat-called { background-color: #e3f2fd; } .seat.seat-raised, .seat.seat-3bet, .seat.seat-pushed { background-color: #e8f5e9; } .seat.seat-posted-blind { box-shadow: 0 1px 2px rgba(0,0,0,0.15); }
 
-
-.player-info { /* ... (uendret) ... */ margin-bottom: 4px; width: 100%; flex-shrink: 0; }
-.hero-seat .player-info { display: none; }
-.player-name { font-weight: bold; font-size: 11px; margin-bottom: 1px; white-space: nowrap; }
-.player-position { font-style: italic; font-size: 10px; color: #555; }
-.player-action { /* ... (uendret) ... */ padding: 3px 0; font-size: 11px; font-weight: bold; width: 100%; line-height: 1.2; color: #333; min-height: 1.2em; flex-shrink: 0; }
-.hero-seat .player-action { display: none; }
-
+.player-info { /* ... (uendret) ... */ margin-bottom: 4px; width: 100%; flex-shrink: 0; } .hero-seat .player-info { display: none; } .player-name { font-weight: bold; font-size: 11px; margin-bottom: 1px; white-space: nowrap; } .player-position { font-style: italic; font-size: 10px; color: #555; } .player-action { /* ... (uendret) ... */ padding: 3px 0; font-size: 11px; font-weight: bold; width: 100%; line-height: 1.2; color: #333; min-height: 1.2em; flex-shrink: 0; } .hero-seat .player-action { display: none; }
 /* Farger for handlingstekst */
-.player-action.action-fold { color: #dc3545; } .player-action.action-call { color: #007bff; }
-.player-action.action-raise, .player-action.action-3bet, .player-action.action-push { color: #28a745; }
-.player-action.action-post { color: #6c757d; }
+.player-action.action-fold { color: #dc3545; } .player-action.action-call { color: #007bff; } .player-action.action-raise, .player-action.action-3bet, .player-action.action-push { color: #28a745; } .player-action.action-post { color: #6c757d; }
+.player-cards { /* ... (uendret) ... */ display: flex; justify-content: center; align-items: center; gap: 3px; width: 100%; min-height: 55px; } .hero-seat .player-cards { min-height: initial; margin: 0; }
 
+/* --- Styling for MOTSTANDER kort-placeholders (som V12) --- */
+.player-cards .card { width: 38px; height: 55px; border: 1px solid #adb5bd; border-radius: 4px; background-color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.15); display: flex; justify-content: center; align-items: center; font-weight: bold; position: relative; box-sizing: border-box; padding: 2px; margin: 0; transition: background-color 0.3s ease, border-color 0.3s ease; overflow: hidden; }
+.player-cards .card.card-placeholder { font-size: 22px; color: #ccc; } .player-cards .card.card-placeholder::before { content: '?'; }
+.player-cards .card-folded { background-color: #ffcdd2; border-color: #e57373; } .player-cards .card-called { background-color: #bbdefb; border-color: #64b5f6; } .player-cards .card-raised { background-color: #c8e6c9; border-color: #81c784; } .player-cards .card-3bet { background-color: #fff9c4; border-color: #fff176; } .player-cards .card-pushed { background-color: #b2ebf2; border-color: #4dd0e1; }
+.player-cards .card-folded::before, .player-cards .card-called::before, .player-cards .card-raised::before, .player-cards .card-3bet::before, .player-cards .card-pushed::before { content: ''; }
 
-.player-cards { /* ... (uendret) ... */ display: flex; justify-content: center; align-items: center; gap: 3px; width: 100%; min-height: 55px; }
-.hero-seat .player-cards { min-height: initial; margin: 0; }
-
-
-/* --- Styling for MOTSTANDER kort-placeholders --- */
-.player-cards .card { /* ... (uendret) ... */ width: 38px; height: 55px; border: 1px solid #adb5bd; border-radius: 4px; background-color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.15); display: flex; justify-content: center; align-items: center; font-weight: bold; position: relative; box-sizing: border-box; padding: 2px; margin: 0; transition: background-color 0.3s ease, border-color 0.3s ease; overflow: hidden; }
-.player-cards .card.card-placeholder { font-size: 22px; color: #ccc; }
-.player-cards .card.card-placeholder::before { content: '?'; }
-/* Farger for placeholder-BAKGRUNN basert på action */
-.player-cards .card-folded { background-color: #ffcdd2; border-color: #e57373; }
-.player-cards .card-called { background-color: #bbdefb; border-color: #64b5f6; }
-.player-cards .card-raised { background-color: #c8e6c9; border-color: #81c784; }
-.player-cards .card-3bet { background-color: #fff9c4; border-color: #fff176; }
-.player-cards .card-pushed { background-color: #b2ebf2; border-color: #4dd0e1; }
-/* Skjul '?' for fargede kort */
-.player-cards .card-folded::before, .player-cards .card-called::before, .player-cards .card-raised::before,
-.player-cards .card-3bet::before, .player-cards .card-pushed::before { content: ''; }
-
-
-/* --- Styling for HERO sine (faktiske) kort (som V2.3) --- */
+/* --- Styling for HERO sine (faktiske) kort (som V12) --- */
 .hero-seat .player-cards .card { width: 70px; height: 105px; border-radius: 6px; padding: 5px; margin: 0 5px; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); justify-content: center; align-items: center; overflow: visible; }
 .hero-seat .player-cards .card.card-placeholder { justify-content: center; font-size: 40px; color: #ccc; } .hero-seat .player-cards .card.card-placeholder::before { content: '?'; }
 .hero-seat .player-cards .card-rank-overlay { position: absolute; font-size: 20px; line-height: 1; font-weight: bold; } .hero-seat .player-cards .card-top-left-rank { top: 6px; left: 6px; } .hero-seat .player-cards .card-bottom-right-rank { bottom: 6px; right: 6px; transform: rotate(180deg); }
@@ -139,30 +81,28 @@ h3 {
 .spades .card-rank-overlay, .spades .card-suit-center, .clubs .card-rank-overlay, .clubs .card-suit-center { color: black; }
 .hearts .card-rank-overlay, .hearts .card-suit-center, .diamonds .card-rank-overlay, .diamonds .card-suit-center { color: red; }
 
-
 .dealer-button { /* ... (uendret) ... */ position: absolute; width: 30px; height: 30px; background: radial-gradient(circle, #ffffff 60%, #e0e0e0 100%); color: #424242; border: 2px solid #757575; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); z-index: 10; }
 .pot-display { /* ... (uendret) ... */ position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0, 0, 0, 0.65); color: white; padding: 8px 14px; border-radius: 5px; font-size: 16px; font-weight: 500; z-index: 5; border: 1px solid rgba(255, 255, 255, 0.2); }
 .scenario-desc { /* ... (uendret) ... */ position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-style: italic; color: #fff; font-size: 14px; background-color: rgba(0, 0, 0, 0.5); padding: 4px 10px; border-radius: 4px; z-index: 15; text-align: center; max-width: 80%; }
-
-/* Hero Controls Area (som V2.3) */
-.hero-controls { text-align: center; margin-bottom: 20px; margin-top: 10px; width: 100%; }
-.hero-controls h2 { margin-bottom: 15px; font-size: 1.4em; }
-#heroPosition { font-weight: bold; color: #d32f2f; }
-.action-buttons button { padding: 10px 20px; margin: 5px 8px; font-size: 16px; cursor: pointer; border-radius: 5px; border: none; transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.1s ease; min-width: 80px; }
-.action-buttons button:disabled { opacity: 0.5; cursor: not-allowed; background-color: #bdbdbd; color: #757575; }
-.action-buttons button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-.action-buttons button[data-action="F"] { background-color: #f44336; color: white;} .action-buttons button[data-action="C"] { background-color: #2196F3; color: white;} .action-buttons button[data-action="R"] { background-color: #4CAF50; color: white;} .action-buttons button[data-action="3B"] { background-color: #FFC107; color: black;} .action-buttons button[data-action="P"] { background-color: #00BCD4; color: white;}
-.action-buttons button[data-action="F"]:hover:not(:disabled) { background-color: #d32f2f; } .action-buttons button[data-action="C"]:hover:not(:disabled) { background-color: #1976D2; } .action-buttons button[data-action="R"]:hover:not(:disabled) { background-color: #388E3C; } .action-buttons button[data-action="3B"]:hover:not(:disabled) { background-color: #FFA000; } .action-buttons button[data-action="P"]:hover:not(:disabled) { background-color: #0097A7; }
-
+/* Hero Controls Area (som V12) */
+.hero-controls { text-align: center; margin-bottom: 20px; margin-top: 10px; width: 100%; } .hero-controls h2 { margin-bottom: 15px; font-size: 1.4em; } #heroPosition { font-weight: bold; color: #d32f2f; }
+.action-buttons button { padding: 10px 20px; margin: 5px 8px; font-size: 16px; cursor: pointer; border-radius: 5px; border: none; transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.1s ease; min-width: 80px; } .action-buttons button:disabled { opacity: 0.5; cursor: not-allowed; background-color: #bdbdbd; color: #757575; } .action-buttons button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.2); } .action-buttons button[data-action="F"] { background-color: #f44336; color: white;} .action-buttons button[data-action="C"] { background-color: #2196F3; color: white;} .action-buttons button[data-action="R"] { background-color: #4CAF50; color: white;} .action-buttons button[data-action="3B"] { background-color: #FFC107; color: black;} .action-buttons button[data-action="P"] { background-color: #00BCD4; color: white;} .action-buttons button[data-action="F"]:hover:not(:disabled) { background-color: #d32f2f; } .action-buttons button[data-action="C"]:hover:not(:disabled) { background-color: #1976D2; } .action-buttons button[data-action="R"]:hover:not(:disabled) { background-color: #388E3C; } .action-buttons button[data-action="3B"]:hover:not(:disabled) { background-color: #FFA000; } .action-buttons button[data-action="P"]:hover:not(:disabled) { background-color: #0097A7; }
 .feedback-area { /* ... (uendret) ... */ margin-top: 15px; padding: 15px 20px; background-color: #e9ecef; border: 1px solid #ced4da; border-radius: 5px; min-height: 50px; width: 90%; max-width: 800px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-#feedbackText { font-weight: bold; margin-bottom: 8px; font-size: 18px; } #feedbackText.correct { color: #388E3C; } #feedbackText.incorrect { color: #d32f2f; }
-#correctActionText { font-style: italic; color: #495057; font-size: 14px; margin-bottom: 10px; }
+#feedbackText { font-weight: bold; margin-bottom: 8px; font-size: 18px; } #feedbackText.correct { color: #388E3C; } #feedbackText.incorrect { color: #d32f2f; } #correctActionText { font-style: italic; color: #495057; font-size: 14px; margin-bottom: 10px; }
 
 #rangeDisplayContainer { /* ... (uendret) ... */ margin-top: 15px; text-align: left; width: fit-content; margin-left: auto; margin-right: auto; border: 1px solid #ccc; padding: 15px; background-color: #fff; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 #rangeDisplayContainer h3 { margin-top: 0; margin-bottom: 12px; font-size: 16px; text-align: center; } #rangeSituationInfo { font-weight: normal; font-style: italic; }
 #rangeGrid { /* ... (uendret) ... */ display: grid; grid-template-columns: repeat(13, 36px); grid-template-rows: repeat(13, 36px); gap: 1px; border: 1px solid #dee2e6; margin-bottom: 10px; background-color: #dee2e6; }
-.range-cell { /* ... (uendret) ... */ border: none; display: flex; justify-content: center; align-items: center; font-size: 10px; font-weight: 500; cursor: default; background-color: #f8f9fa; position: relative; color: #343a40; box-sizing: border-box; line-height: 1.1; word-break: break-all; transition: transform 0.1s ease; }
-.range-cell:hover { transform: scale(1.1); z-index: 1; box-shadow: 0 0 5px rgba(0,0,0,0.3); }
+
+.range-cell {
+    border: none; display: flex; justify-content: center; align-items: center;
+    font-size: 10px; font-weight: 500; cursor: default; background-color: #f8f9fa;
+    position: relative; color: #343a40; box-sizing: border-box; line-height: 1.1;
+    word-break: break-all; transition: transform 0.1s ease;
+    border-radius: 4px; /* Avrundede hjørner */
+    box-shadow: inset 0 0 1px rgba(0,0,0,0.1), 0 1px 1px rgba(0,0,0,0.1); /* Subtil skygge */
+}
+.range-cell:hover { /* ... (uendret) ... */ transform: scale(1.1); z-index: 1; box-shadow: 0 0 5px rgba(0,0,0,0.3); }
 .range-raise { background-color: #c8e6c9; } .range-call { background-color: #bbdefb; } .range-fold { background-color: #ffcdd2; } .range-mixed { background-color: #fff9c4; }
 .range-cell .tooltiptext { /* ... (uendret) ... */ visibility: hidden; min-width: 110px; background-color: #424242; color: #fff; text-align: center; border-radius: 5px; padding: 7px 9px; position: absolute; z-index: 20; bottom: 120%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s ease, visibility 0s linear 0.3s; font-size: 11px; font-weight: normal; white-space: pre-line; pointer-events: none; }
 .range-cell .tooltiptext::after { /* ... (uendret) ... */ content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #424242 transparent transparent transparent; }
