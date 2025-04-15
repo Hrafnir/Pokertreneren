@@ -1,7 +1,7 @@
-// script.js (Versjon 12 - Korrigert spillerposisjonering)
+// script.js (Versjon 13 / V2.5 - Korrigert spillerposisjonering igjen)
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Globale Variabler & Tilstand (som V11) ---
+    // --- Globale Variabler & Tilstand (som V12) ---
     let currentDeck = []; let heroHand = []; let currentHeroPositionName = '';
     let currentDealerPositionIndex = -1; let currentScenario = 'RFI';
     let currentScenarioDescription = ''; let actionsPrecedingHero = [];
@@ -11,11 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const HERO_LOGICAL_SEAT_INDEX = 0; let VISUAL_HERO_SEAT_INDEX = -1;
     let lastHandPlayedInfo = {};
 
-    // --- DOM Elementer (som V11) ---
+    // --- DOM Elementer (som V12) ---
     const gameTypeSelect = document.getElementById('gameType'); const stackDepthSelect = document.getElementById('stackDepth'); const trainingModeSelect = document.getElementById('trainingMode'); const positionLabel = document.getElementById('positionLabel'); const positionSelect = document.getElementById('positionSelect'); const delayInput = document.getElementById('delayInput'); const newHandBtn = document.getElementById('newHandBtn'); const pokerTable = document.querySelector('.poker-table'); const heroPositionSpan = document.getElementById('heroPosition'); const actionButtonsContainer = document.querySelector('.action-buttons'); const feedbackText = document.getElementById('feedbackText'); const correctActionText = document.getElementById('correctActionText'); const rangeDisplayContainer = document.getElementById('rangeDisplayContainer'); const rangeTitleElement = document.getElementById('rangeTitle'); const rangeGrid = document.getElementById('rangeGrid'); const potDisplaySpan = document.querySelector('.pot-display span'); const dealerButtonElement = document.querySelector('.dealer-button'); const scenarioDescriptionElement = document.getElementById('scenarioDescription'); const rangeSituationInfo = document.getElementById('rangeSituationInfo');
-    // Session buttons finnes ikke i treneren
 
-    // --- Konstanter (som V11) ---
+    // --- Konstanter (som V12) ---
     const suits = ['c', 'd', 'h', 's']; const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
     const positions9max = ["UTG", "UTG+1", "MP", "MP+1", "HJ", "CO", "BTN", "SB", "BB"]; const positions6max = ["UTG", "MP", "CO", "BTN", "SB", "BB"];
 
@@ -28,30 +27,39 @@ document.addEventListener('DOMContentLoaded', () => {
     function getActualSeatIndex(positionName, dealerIndex, numPlayers) { const positions = numPlayers === 9 ? positions9max : positions6max; if (dealerIndex < 0 || !positions || positions.length !== numPlayers) { console.error("Err getActualSeatIdx", positionName, dealerIndex, numPlayers); return -1; } const listIndex = positions.indexOf(positionName); if (listIndex === -1) { /*console.warn(`Pos not found '${positionName}'`, numPlayers);*/ return -1; } const btnListIndex = positions.indexOf("BTN"); if (btnListIndex === -1) { console.error("BTN not found", numPlayers); return -1; } const stepsFromBtnInList = (listIndex - btnListIndex + numPlayers) % numPlayers; const actualSeatIndex = (dealerIndex + stepsFromBtnInList) % numPlayers; return actualSeatIndex; }
     function populatePositionSelect() { const positions = numPlayers === 9 ? positions9max : positions6max; positionSelect.innerHTML = ''; positions.forEach(pos => { const option = document.createElement('option'); option.value = pos; option.textContent = pos; positionSelect.appendChild(option); }); let defaultPos = "CO"; if (!positions.includes(defaultPos)) defaultPos = "BTN"; if (!positions.includes(defaultPos)) defaultPos = positions[Math.floor(positions.length / 2)]; positionSelect.value = defaultPos; currentFixedPosition = positionSelect.value; }
 
-    // REVIDERT for bedre symmetri
+    // REVIDERT getSeatPosition - Tilbake til V11-tilnærming med korrigert vinkel
     function getSeatPosition(logicalSeatIndex, totalPlayers) {
         if (VISUAL_HERO_SEAT_INDEX === -1) calculateVisualHeroSeatIndex();
 
-        const angleOffset = 90; // Start bottom (Hero's target angle)
+        // Calculate the VISUAL index for this seat
+        const visualIndex = (VISUAL_HERO_SEAT_INDEX + logicalSeatIndex) % totalPlayers;
+
+        // Define the target angle for the bottom position (Hero)
+        const heroTargetAngle = 90; // Bottom center
+
+        // Calculate the angle increment between seats
         const angleIncrement = 360 / totalPlayers;
 
-        // Calculate the angle for the VISUAL slot corresponding to the LOGICAL index
-        // Visual Slot Index = (Hero's Visual Slot + Logical Index Offset) % N
-        // Logical Index Offset = (Logical Index - Hero's Logical Index + N) % N = Logical Index (since Hero Logical is 0)
-        const targetVisualSlot = (VISUAL_HERO_SEAT_INDEX + logicalSeatIndex) % totalPlayers;
-        const angle = angleOffset + targetVisualSlot * angleIncrement;
+        // Calculate the angle for the VISUAL index, starting from the top (-90)
+        const baseAngle = -90 + visualIndex * angleIncrement;
 
-        const angleRad = angle * (Math.PI / 180);
+        // Calculate the difference needed to rotate the visual Hero index to the bottom
+        const currentHeroVisualAngle = -90 + VISUAL_HERO_SEAT_INDEX * angleIncrement;
+        const rotationAdjustment = heroTargetAngle - currentHeroVisualAngle;
+
+        // Apply the rotation adjustment to the base angle
+        const finalAngle = baseAngle + rotationAdjustment;
+
+        const angleRad = finalAngle * (Math.PI / 180);
         const radiusX = 45; // Width radius
         const radiusY = 42; // Height radius
         const left = 50 + radiusX * Math.cos(angleRad);
         const top = 50 + radiusY * Math.sin(angleRad);
 
-        // console.log(`Logical ${logicalSeatIndex} -> Visual ${targetVisualSlot} -> Angle ${angle.toFixed(1)} -> Top ${top.toFixed(1)}%, Left ${left.toFixed(1)}%`);
+        // console.log(`Logical ${logicalSeatIndex} -> Visual ${visualIndex} -> Final Angle ${finalAngle.toFixed(1)} -> Top ${top.toFixed(1)}%, Left ${left.toFixed(1)}%`);
 
         return { top: `${top}%`, left: `${left}%` };
     }
-
 
     function getButtonPosition(dealerVisualSeatElement) { if (!dealerVisualSeatElement) return { top: '50%', left: '50%' }; const tableRect = pokerTable.getBoundingClientRect(); const seatRect = dealerVisualSeatElement.getBoundingClientRect(); const seatCenterX = (seatRect.left + seatRect.width / 2) - tableRect.left; const seatCenterY = (seatRect.top + seatRect.height / 2) - tableRect.top; const tableCenterX = tableRect.width / 2; const tableCenterY = tableRect.height / 2; const angleRad = Math.atan2(seatCenterY - tableCenterY, seatCenterX - tableCenterX); const buttonOffset = 25; const btnLeft = seatCenterX + buttonOffset * Math.cos(angleRad) - dealerButtonElement.offsetWidth / 2; const btnTop = seatCenterY + buttonOffset * Math.sin(angleRad) - dealerButtonElement.offsetHeight / 2; return { top: `${btnTop}px`, left: `${btnLeft}px` }; }
     function setupTableUI() { if (VISUAL_HERO_SEAT_INDEX === -1) calculateVisualHeroSeatIndex(); pokerTable.innerHTML = ''; pokerTable.appendChild(dealerButtonElement); pokerTable.appendChild(potDisplaySpan.parentNode); pokerTable.appendChild(scenarioDescriptionElement); let opponentCounter = 1; for (let i = 0; i < numPlayers; i++) { const seatDiv = document.createElement('div'); seatDiv.classList.add('seat'); seatDiv.dataset.seatId = i; const pos = getSeatPosition(i, numPlayers); seatDiv.style.left = pos.left; seatDiv.style.top = pos.top; let playerInfoHTML = ''; if (i === HERO_LOGICAL_SEAT_INDEX) { seatDiv.classList.add('hero-seat'); playerInfoHTML = `<div class="player-cards"></div>`; } else { const playerName = `Spiller ${opponentCounter++}`; playerInfoHTML = `<div class="player-info"><span class="player-name">${playerName}</span><span class="player-position">--</span></div><div class="player-cards"><div class="card card-placeholder"></div><div class="card card-placeholder"></div></div><span class="player-action"></span>`; } seatDiv.innerHTML = `<div class="seat-content">${playerInfoHTML}</div>`; pokerTable.appendChild(seatDiv); } }
@@ -74,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
     actionButtonsContainer.addEventListener('click', (e) => { if (e.target.tagName === 'BUTTON' && !e.target.disabled) { actionButtonsContainer.querySelectorAll('button').forEach(b => b.disabled = true); handleUserAction(e.target.dataset.action); } });
 
     // --- Initialisering ---
-    console.log("Initializing Poker Trainer V2.4...");
+    console.log("Initializing Poker Trainer V2.5...");
     calculateVisualHeroSeatIndex(); setupTableUI(); populatePositionSelect(); setupNewHand();
     console.log("Initialization complete.");
 });
