@@ -34,7 +34,7 @@ h3 {
 .controls button:hover { background-color: #0056b3; }
 
 .table-container {
-    margin-bottom: 45px; /* ØKT MARGIN MER for plass under */
+    margin-bottom: 45px; /* Mer plass under */
     position: relative;
     width: 90%;
     max-width: 750px;
@@ -48,24 +48,39 @@ h3 {
     display: flex; justify-content: center; align-items: center;
 }
 
-.seat { /* ... (uendret) ... */
-    position: absolute; width: 85px; height: 105px; background-color: #f8f9fa; border: 1px solid #adb5bd; border-radius: 5px;
-    display: flex; justify-content: center; align-items: center; padding: 0; box-sizing: border-box; font-size: 10px; text-align: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15); transform: translate(-50%, -50%);
-    transition: background-color 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease; overflow: hidden;
+.seat {
+    position: absolute;
+    width: 85px;
+    height: 105px;
+    background-color: #f8f9fa;
+    border: 1px solid #adb5bd;
+    border-radius: 6px; /* Litt mer avrundet */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    box-sizing: border-box;
+    font-size: 10px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* LAGT TIL SKYGGE */
+    transform: translate(-50%, -50%);
+    transition: background-color 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
 }
-.seat.hero-seat { /* Justert for sentrering */
+.seat.hero-seat {
     border: 3px solid #ffc107;
     background-color: #fffde7;
     min-width: 160px;
     min-height: 120px;
     overflow: visible;
-    padding: 0; /* Padding i seat-content */
+    padding: 0;
     z-index: 5;
-    /* left: 50% settes av JS, transform sentrerer */
+    box-shadow: 0 3px 6px rgba(0,0,0,0.25); /* Litt tydeligere skygge for hero */
 }
-.seat.action-on { /* ... (uendret) ... */
-     box-shadow: 0 0 12px 4px #ffc107; border-color: #ffa000;
+.seat.action-on {
+     box-shadow: 0 0 12px 4px #ffc107; /* Behold glød */
+     border-color: #ffa000;
+     z-index: 6; /* Legg over andre seter når det er action */
 }
 
 .seat-content { /* ... (uendret) ... */
@@ -78,21 +93,17 @@ h3 {
 
 
 /* --- Action Styling for Seats --- */
-.seat.seat-folded { background-color: #ffebee; opacity: 0.7; }
+.seat.seat-folded { background-color: #ffebee; opacity: 0.7; box-shadow: 0 1px 2px rgba(0,0,0,0.15); /* Mindre skygge når foldet */}
 .seat.seat-called { background-color: #e3f2fd; }
 .seat.seat-raised, .seat.seat-3bet, .seat.seat-pushed { background-color: #e8f5e9; }
-.seat.seat-posted-blind { }
+.seat.seat-posted-blind { box-shadow: 0 1px 2px rgba(0,0,0,0.15); /* Mindre skygge for blinds */ }
 
 
-.player-info { /* ... (uendret) ... */
-     margin-bottom: 4px; width: 100%; flex-shrink: 0;
-}
+.player-info { /* ... (uendret) ... */ margin-bottom: 4px; width: 100%; flex-shrink: 0; }
 .hero-seat .player-info { display: none; }
 .player-name { font-weight: bold; font-size: 11px; margin-bottom: 1px; white-space: nowrap; }
 .player-position { font-style: italic; font-size: 10px; color: #555; }
-.player-action { /* ... (uendret) ... */
-    padding: 3px 0; font-size: 11px; font-weight: bold; width: 100%; line-height: 1.2; color: #333; min-height: 1.2em; flex-shrink: 0;
-}
+.player-action { /* ... (uendret) ... */ padding: 3px 0; font-size: 11px; font-weight: bold; width: 100%; line-height: 1.2; color: #333; min-height: 1.2em; flex-shrink: 0; }
 .hero-seat .player-action { display: none; }
 
 /* Farger for handlingstekst */
@@ -101,18 +112,12 @@ h3 {
 .player-action.action-post { color: #6c757d; }
 
 
-.player-cards { /* ... (uendret) ... */
-    display: flex; justify-content: center; align-items: center; gap: 3px; width: 100%; min-height: 55px;
-}
+.player-cards { /* ... (uendret) ... */ display: flex; justify-content: center; align-items: center; gap: 3px; width: 100%; min-height: 55px; }
 .hero-seat .player-cards { min-height: initial; margin: 0; }
 
 
 /* --- Styling for MOTSTANDER kort-placeholders --- */
-.player-cards .card { /* ... (uendret) ... */
-    width: 38px; height: 55px; border: 1px solid #adb5bd; border-radius: 4px; background-color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.15);
-    display: flex; justify-content: center; align-items: center; font-weight: bold; position: relative; box-sizing: border-box; padding: 2px; margin: 0;
-    transition: background-color 0.3s ease, border-color 0.3s ease; overflow: hidden;
-}
+.player-cards .card { /* ... (uendret) ... */ width: 38px; height: 55px; border: 1px solid #adb5bd; border-radius: 4px; background-color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.15); display: flex; justify-content: center; align-items: center; font-weight: bold; position: relative; box-sizing: border-box; padding: 2px; margin: 0; transition: background-color 0.3s ease, border-color 0.3s ease; overflow: hidden; }
 .player-cards .card.card-placeholder { font-size: 22px; color: #ccc; }
 .player-cards .card.card-placeholder::before { content: '?'; }
 /* Farger for placeholder-BAKGRUNN basert på action */
@@ -126,115 +131,42 @@ h3 {
 .player-cards .card-3bet::before, .player-cards .card-pushed::before { content: ''; }
 
 
-/* --- Styling for HERO sine (faktiske) kort --- */
-.hero-seat .player-cards .card {
-    width: 70px; height: 105px; border-radius: 6px; padding: 5px; margin: 0 5px; background-color: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2); justify-content: center; /* Sentrerer innholdet (midtstilt suit) */ align-items: center; /* Sentrerer innholdet */ overflow: visible;
-}
-.hero-seat .player-cards .card.card-placeholder { /* ... (uendret) ... */
-    justify-content: center; font-size: 40px; color: #ccc;
-}
-.hero-seat .player-cards .card.card-placeholder::before { content: '?'; }
-
-/* NY styling for rank overlay */
-.hero-seat .player-cards .card-rank-overlay {
-    position: absolute;
-    font-size: 20px; /* Tilpass etter ønske */
-    line-height: 1;
-    font-weight: bold;
-    /* Farge arves fra .card's suit-klasse */
-}
-.hero-seat .player-cards .card-top-left-rank { top: 6px; left: 6px; }
-.hero-seat .player-cards .card-bottom-right-rank { bottom: 6px; right: 6px; transform: rotate(180deg); }
-
-/* Kun det midtre symbolet */
-.hero-seat .player-cards .card-suit-center {
-    position: relative; /* Ikke absolutt lenger? La flex sentrere */
-    font-size: 44px;
-    /* transform: translate(-50%, -50%); Fjernet */
-}
-
-/* Farger for symboler/rank (på .card) */
-.spades .card-rank-overlay, .spades .card-suit-center,
-.clubs .card-rank-overlay, .clubs .card-suit-center { color: black; }
-
-.hearts .card-rank-overlay, .hearts .card-suit-center,
-.diamonds .card-rank-overlay, .diamonds .card-suit-center { color: red; }
+/* --- Styling for HERO sine (faktiske) kort (som V2.3) --- */
+.hero-seat .player-cards .card { width: 70px; height: 105px; border-radius: 6px; padding: 5px; margin: 0 5px; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); justify-content: center; align-items: center; overflow: visible; }
+.hero-seat .player-cards .card.card-placeholder { justify-content: center; font-size: 40px; color: #ccc; } .hero-seat .player-cards .card.card-placeholder::before { content: '?'; }
+.hero-seat .player-cards .card-rank-overlay { position: absolute; font-size: 20px; line-height: 1; font-weight: bold; } .hero-seat .player-cards .card-top-left-rank { top: 6px; left: 6px; } .hero-seat .player-cards .card-bottom-right-rank { bottom: 6px; right: 6px; transform: rotate(180deg); }
+.hero-seat .player-cards .card-suit-center { position: relative; font-size: 44px; }
+.spades .card-rank-overlay, .spades .card-suit-center, .clubs .card-rank-overlay, .clubs .card-suit-center { color: black; }
+.hearts .card-rank-overlay, .hearts .card-suit-center, .diamonds .card-rank-overlay, .diamonds .card-suit-center { color: red; }
 
 
-.dealer-button { /* ... (uendret) ... */
-    position: absolute; width: 30px; height: 30px; background: radial-gradient(circle, #ffffff 60%, #e0e0e0 100%); color: #424242;
-    border: 2px solid #757575; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold;
-    font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); z-index: 10;
-}
-.pot-display { /* ... (uendret) ... */
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0, 0, 0, 0.65); color: white;
-    padding: 8px 14px; border-radius: 5px; font-size: 16px; font-weight: 500; z-index: 5; border: 1px solid rgba(255, 255, 255, 0.2);
-}
-.scenario-desc { /* ... (uendret) ... */
-     position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-style: italic; color: #fff; font-size: 14px;
-     background-color: rgba(0, 0, 0, 0.5); padding: 4px 10px; border-radius: 4px; z-index: 15; text-align: center; max-width: 80%;
-}
+.dealer-button { /* ... (uendret) ... */ position: absolute; width: 30px; height: 30px; background: radial-gradient(circle, #ffffff 60%, #e0e0e0 100%); color: #424242; border: 2px solid #757575; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); z-index: 10; }
+.pot-display { /* ... (uendret) ... */ position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0, 0, 0, 0.65); color: white; padding: 8px 14px; border-radius: 5px; font-size: 16px; font-weight: 500; z-index: 5; border: 1px solid rgba(255, 255, 255, 0.2); }
+.scenario-desc { /* ... (uendret) ... */ position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-style: italic; color: #fff; font-size: 14px; background-color: rgba(0, 0, 0, 0.5); padding: 4px 10px; border-radius: 4px; z-index: 15; text-align: center; max-width: 80%; }
 
-/* Hero Controls Area */
-.hero-controls { /* ... (uendret) ... */
-    text-align: center; margin-bottom: 20px; margin-top: 10px; width: 100%;
-}
+/* Hero Controls Area (som V2.3) */
+.hero-controls { text-align: center; margin-bottom: 20px; margin-top: 10px; width: 100%; }
 .hero-controls h2 { margin-bottom: 15px; font-size: 1.4em; }
 #heroPosition { font-weight: bold; color: #d32f2f; }
-
-.action-buttons button { /* ... (uendret) ... */
-    padding: 10px 20px; margin: 5px 8px; font-size: 16px; cursor: pointer; border-radius: 5px; border: none;
-    transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.1s ease; min-width: 80px;
-}
+.action-buttons button { padding: 10px 20px; margin: 5px 8px; font-size: 16px; cursor: pointer; border-radius: 5px; border: none; transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.1s ease; min-width: 80px; }
 .action-buttons button:disabled { opacity: 0.5; cursor: not-allowed; background-color: #bdbdbd; color: #757575; }
 .action-buttons button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-.action-buttons button[data-action="F"] { background-color: #f44336; color: white;}
-.action-buttons button[data-action="C"] { background-color: #2196F3; color: white;}
-.action-buttons button[data-action="R"] { background-color: #4CAF50; color: white;}
-.action-buttons button[data-action="3B"] { background-color: #FFC107; color: black;}
-.action-buttons button[data-action="P"] { background-color: #00BCD4; color: white;}
-.action-buttons button[data-action="F"]:hover:not(:disabled) { background-color: #d32f2f; }
-.action-buttons button[data-action="C"]:hover:not(:disabled) { background-color: #1976D2; }
-.action-buttons button[data-action="R"]:hover:not(:disabled) { background-color: #388E3C; }
-.action-buttons button[data-action="3B"]:hover:not(:disabled) { background-color: #FFA000; }
-.action-buttons button[data-action="P"]:hover:not(:disabled) { background-color: #0097A7; }
+.action-buttons button[data-action="F"] { background-color: #f44336; color: white;} .action-buttons button[data-action="C"] { background-color: #2196F3; color: white;} .action-buttons button[data-action="R"] { background-color: #4CAF50; color: white;} .action-buttons button[data-action="3B"] { background-color: #FFC107; color: black;} .action-buttons button[data-action="P"] { background-color: #00BCD4; color: white;}
+.action-buttons button[data-action="F"]:hover:not(:disabled) { background-color: #d32f2f; } .action-buttons button[data-action="C"]:hover:not(:disabled) { background-color: #1976D2; } .action-buttons button[data-action="R"]:hover:not(:disabled) { background-color: #388E3C; } .action-buttons button[data-action="3B"]:hover:not(:disabled) { background-color: #FFA000; } .action-buttons button[data-action="P"]:hover:not(:disabled) { background-color: #0097A7; }
 
-.feedback-area { /* ... (uendret) ... */
-    margin-top: 15px; padding: 15px 20px; background-color: #e9ecef; border: 1px solid #ced4da; border-radius: 5px;
-    min-height: 50px; width: 90%; max-width: 800px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-#feedbackText { font-weight: bold; margin-bottom: 8px; font-size: 18px; }
-#feedbackText.correct { color: #388E3C; } #feedbackText.incorrect { color: #d32f2f; }
+.feedback-area { /* ... (uendret) ... */ margin-top: 15px; padding: 15px 20px; background-color: #e9ecef; border: 1px solid #ced4da; border-radius: 5px; min-height: 50px; width: 90%; max-width: 800px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+#feedbackText { font-weight: bold; margin-bottom: 8px; font-size: 18px; } #feedbackText.correct { color: #388E3C; } #feedbackText.incorrect { color: #d32f2f; }
 #correctActionText { font-style: italic; color: #495057; font-size: 14px; margin-bottom: 10px; }
 
-#rangeDisplayContainer { /* ... (uendret) ... */
-    margin-top: 15px; text-align: left; width: fit-content; margin-left: auto; margin-right: auto; border: 1px solid #ccc;
-    padding: 15px; background-color: #fff; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-#rangeDisplayContainer h3 { margin-top: 0; margin-bottom: 12px; font-size: 16px; text-align: center; }
-#rangeSituationInfo { font-weight: normal; font-style: italic; }
-#rangeGrid { /* ... (uendret) ... */
-    display: grid; grid-template-columns: repeat(13, 36px); grid-template-rows: repeat(13, 36px); gap: 1px;
-    border: 1px solid #dee2e6; margin-bottom: 10px; background-color: #dee2e6;
-}
-.range-cell { /* ... (uendret) ... */
-    border: none; display: flex; justify-content: center; align-items: center; font-size: 10px; font-weight: 500; cursor: default;
-    background-color: #f8f9fa; position: relative; color: #343a40; box-sizing: border-box; line-height: 1.1; word-break: break-all; transition: transform 0.1s ease;
-}
+#rangeDisplayContainer { /* ... (uendret) ... */ margin-top: 15px; text-align: left; width: fit-content; margin-left: auto; margin-right: auto; border: 1px solid #ccc; padding: 15px; background-color: #fff; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+#rangeDisplayContainer h3 { margin-top: 0; margin-bottom: 12px; font-size: 16px; text-align: center; } #rangeSituationInfo { font-weight: normal; font-style: italic; }
+#rangeGrid { /* ... (uendret) ... */ display: grid; grid-template-columns: repeat(13, 36px); grid-template-rows: repeat(13, 36px); gap: 1px; border: 1px solid #dee2e6; margin-bottom: 10px; background-color: #dee2e6; }
+.range-cell { /* ... (uendret) ... */ border: none; display: flex; justify-content: center; align-items: center; font-size: 10px; font-weight: 500; cursor: default; background-color: #f8f9fa; position: relative; color: #343a40; box-sizing: border-box; line-height: 1.1; word-break: break-all; transition: transform 0.1s ease; }
 .range-cell:hover { transform: scale(1.1); z-index: 1; box-shadow: 0 0 5px rgba(0,0,0,0.3); }
 .range-raise { background-color: #c8e6c9; } .range-call { background-color: #bbdefb; } .range-fold { background-color: #ffcdd2; } .range-mixed { background-color: #fff9c4; }
-.range-cell .tooltiptext { /* ... (uendret) ... */
-  visibility: hidden; min-width: 110px; background-color: #424242; color: #fff; text-align: center; border-radius: 5px; padding: 7px 9px;
-  position: absolute; z-index: 20; bottom: 120%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s ease, visibility 0s linear 0.3s;
-  font-size: 11px; font-weight: normal; white-space: pre-line; pointer-events: none;
-}
-.range-cell .tooltiptext::after { /* ... (uendret) ... */
-  content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #424242 transparent transparent transparent;
-}
+.range-cell .tooltiptext { /* ... (uendret) ... */ visibility: hidden; min-width: 110px; background-color: #424242; color: #fff; text-align: center; border-radius: 5px; padding: 7px 9px; position: absolute; z-index: 20; bottom: 120%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s ease, visibility 0s linear 0.3s; font-size: 11px; font-weight: normal; white-space: pre-line; pointer-events: none; }
+.range-cell .tooltiptext::after { /* ... (uendret) ... */ content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #424242 transparent transparent transparent; }
 .range-cell:hover .tooltiptext { visibility: visible; opacity: 0.95; transition: opacity 0.3s ease; }
 .legend { margin-top: 10px; text-align: center; font-size: 12px; }
-.legend span { /* ... (uendret) ... */
-    display: inline-block; padding: 4px 10px; margin: 3px 5px; border-radius: 4px; color: #424242; border: 1px solid #bdbdbd; font-weight: 500;
-}
+.legend span { /* ... (uendret) ... */ display: inline-block; padding: 4px 10px; margin: 3px 5px; border-radius: 4px; color: #424242; border: 1px solid #bdbdbd; font-weight: 500; }
 .legend-raise { background-color: #c8e6c9; } .legend-call { background-color: #bbdefb; } .legend-fold { background-color: #ffcdd2; } .legend-mixed { background-color: #fff9c4; }
