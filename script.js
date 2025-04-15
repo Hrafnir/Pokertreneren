@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- DOM Elementer (som V11) ---
     const gameTypeSelect = document.getElementById('gameType'); const stackDepthSelect = document.getElementById('stackDepth'); const trainingModeSelect = document.getElementById('trainingMode'); const positionLabel = document.getElementById('positionLabel'); const positionSelect = document.getElementById('positionSelect'); const delayInput = document.getElementById('delayInput'); const newHandBtn = document.getElementById('newHandBtn'); const pokerTable = document.querySelector('.poker-table'); const heroPositionSpan = document.getElementById('heroPosition'); const actionButtonsContainer = document.querySelector('.action-buttons'); const feedbackText = document.getElementById('feedbackText'); const correctActionText = document.getElementById('correctActionText'); const rangeDisplayContainer = document.getElementById('rangeDisplayContainer'); const rangeTitleElement = document.getElementById('rangeTitle'); const rangeGrid = document.getElementById('rangeGrid'); const potDisplaySpan = document.querySelector('.pot-display span'); const dealerButtonElement = document.querySelector('.dealer-button'); const scenarioDescriptionElement = document.getElementById('scenarioDescription'); const rangeSituationInfo = document.getElementById('rangeSituationInfo');
-    // Ingen accumulatedOutputArea her i treneren
+    // Session buttons finnes ikke i treneren
 
     // --- Konstanter (som V11) ---
     const suits = ['c', 'd', 'h', 's']; const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
@@ -28,26 +28,26 @@ document.addEventListener('DOMContentLoaded', () => {
     function getActualSeatIndex(positionName, dealerIndex, numPlayers) { const positions = numPlayers === 9 ? positions9max : positions6max; if (dealerIndex < 0 || !positions || positions.length !== numPlayers) { console.error("Err getActualSeatIdx", positionName, dealerIndex, numPlayers); return -1; } const listIndex = positions.indexOf(positionName); if (listIndex === -1) { /*console.warn(`Pos not found '${positionName}'`, numPlayers);*/ return -1; } const btnListIndex = positions.indexOf("BTN"); if (btnListIndex === -1) { console.error("BTN not found", numPlayers); return -1; } const stepsFromBtnInList = (listIndex - btnListIndex + numPlayers) % numPlayers; const actualSeatIndex = (dealerIndex + stepsFromBtnInList) % numPlayers; return actualSeatIndex; }
     function populatePositionSelect() { const positions = numPlayers === 9 ? positions9max : positions6max; positionSelect.innerHTML = ''; positions.forEach(pos => { const option = document.createElement('option'); option.value = pos; option.textContent = pos; positionSelect.appendChild(option); }); let defaultPos = "CO"; if (!positions.includes(defaultPos)) defaultPos = "BTN"; if (!positions.includes(defaultPos)) defaultPos = positions[Math.floor(positions.length / 2)]; positionSelect.value = defaultPos; currentFixedPosition = positionSelect.value; }
 
-    // REVIDERT for bedre symmetri (som i V11 Plotter)
+    // REVIDERT for bedre symmetri
     function getSeatPosition(logicalSeatIndex, totalPlayers) {
         if (VISUAL_HERO_SEAT_INDEX === -1) calculateVisualHeroSeatIndex();
 
-        const angleOffset = -90; // Start top
+        const angleOffset = 90; // Start bottom (Hero's target angle)
         const angleIncrement = 360 / totalPlayers;
 
-        // Calculate the visual slot index where this logical seat should appear
+        // Calculate the angle for the VISUAL slot corresponding to the LOGICAL index
+        // Visual Slot Index = (Hero's Visual Slot + Logical Index Offset) % N
+        // Logical Index Offset = (Logical Index - Hero's Logical Index + N) % N = Logical Index (since Hero Logical is 0)
         const targetVisualSlot = (VISUAL_HERO_SEAT_INDEX + logicalSeatIndex) % totalPlayers;
-
-        // Calculate the angle for that target visual slot
         const angle = angleOffset + targetVisualSlot * angleIncrement;
 
         const angleRad = angle * (Math.PI / 180);
-        const radiusX = 45; // Width radius of the oval
-        const radiusY = 42; // Height radius of the oval
+        const radiusX = 45; // Width radius
+        const radiusY = 42; // Height radius
         const left = 50 + radiusX * Math.cos(angleRad);
         const top = 50 + radiusY * Math.sin(angleRad);
 
-        // console.log(`Logical ${logicalSeatIndex} -> Visual ${targetVisualSlot} -> Angle ${angle.toFixed(1)} -> Top ${top.toFixed(1)}%, Left ${left.toFixed(1)}%`); // Debugging
+        // console.log(`Logical ${logicalSeatIndex} -> Visual ${targetVisualSlot} -> Angle ${angle.toFixed(1)} -> Top ${top.toFixed(1)}%, Left ${left.toFixed(1)}%`);
 
         return { top: `${top}%`, left: `${left}%` };
     }
@@ -72,7 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
     positionSelect.addEventListener('change', (e) => { clearTimeout(autoNewHandTimer); if (currentTrainingMode === 'trainer') { currentFixedPosition = e.target.value; setupNewHand(); } });
     newHandBtn.addEventListener('click', () => { clearTimeout(autoNewHandTimer); setupNewHand(); });
     actionButtonsContainer.addEventListener('click', (e) => { if (e.target.tagName === 'BUTTON' && !e.target.disabled) { actionButtonsContainer.querySelectorAll('button').forEach(b => b.disabled = true); handleUserAction(e.target.dataset.action); } });
-    // Session buttons finnes ikke i treneren
 
     // --- Initialisering ---
     console.log("Initializing Poker Trainer V2.4...");
