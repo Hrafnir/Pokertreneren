@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poker Pre-flop Trainer V2.5</title>
+    <title>Poker Pre-flop Trainer V2.6</title> <!-- Oppdatert tittel -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Poker Pre-flop GTO Trainer V2.5</h1>
+    <h1>Poker Pre-flop GTO Trainer V2.6</h1> <!-- Oppdatert tittel -->
 
-    <!-- NY: Scenario Valg -->
+    <!-- Scenario Valg -->
     <div class="scenario-buttons">
         <button class="scenario-btn" data-scenario-type="6max_cash">6-max Cash</button>
         <button class="scenario-btn" data-scenario-type="6max_tourney">6-max Tourney</button>
@@ -17,33 +17,28 @@
     </div>
 
     <div class="controls">
-        <!-- Fjernet Bord dropdown -->
         <label for="stackDepth">Stack (BB):</label>
         <select id="stackDepth">
             <option value="40bb" selected>40 BB</option>
             <option value="10bb">10 BB</option>
         </select>
-
         <label for="trainingMode">Modus:</label>
         <select id="trainingMode">
             <option value="standard" selected>Standard (Feedback Etterpå)</option>
             <option value="trainer">Posisjonstrener (Vis Range Først)</option>
         </select>
-
         <label for="positionSelect" id="positionLabel" style="display: none;">Tren Posisjon:</label>
-        <select id="positionSelect" style="display: none;">
-            <!-- Options fylles dynamisk av JS -->
-        </select>
-
+        <select id="positionSelect" style="display: none;"></select>
         <label for="delayInput">Neste Hånd Forsinkelse (sek):</label>
         <input type="number" id="delayInput" value="3" min="0" max="30" step="1" style="width: 50px;">
-
          <button id="newHandBtn">Ny Hånd / Scenario</button>
     </div>
 
     <div class="table-container">
         <div class="poker-table">
+            <!-- Pot flyttet hit for enkelhets skyld -->
             <div class="pot-display">Pot: <span>1.5</span> BB</div>
+            <!-- Scenario beskrivelse flyttes til midten via CSS -->
             <div id="scenarioDescription" class="scenario-desc"></div>
             <div class="dealer-button">D</div>
             <!-- Seter legges til dynamisk av JS -->
@@ -53,13 +48,7 @@
     <!-- Hero Info og Handling -->
     <div class="hero-controls">
          <h2>Din Tur (<span id="heroPosition">--</span>)</h2>
-         <div class="action-buttons">
-             <button data-action="F">Fold</button>
-             <button data-action="C">Call</button>
-             <button data-action="R">Raise</button>
-             <button data-action="3B">3-Bet</button>
-             <button data-action="P">Push (All-in)</button>
-         </div>
+         <div class="action-buttons"> <button data-action="F">Fold</button> <button data-action="C">Call</button> <button data-action="R">Raise</button> <button data-action="3B">3-Bet</button> <button data-action="P">Push (All-in)</button> </div>
      </div>
 
     <div class="feedback-area">
@@ -68,12 +57,7 @@
         <div id="rangeDisplayContainer" style="display: none;">
             <h3 id="rangeTitle">Anbefalt Range (<span id="rangeSituationInfo"></span>):</h3>
             <div id="rangeGrid"></div>
-            <div class="legend">
-                 <span class="legend-raise">Raise/3Bet/Push</span>
-                 <span class="legend-call">Call</span>
-                 <span class="legend-fold">Fold</span>
-                 <span class="legend-mixed">Mixed</span>
-            </div>
+            <div class="legend"> <span class="legend-raise">Raise/3Bet/Push</span> <span class="legend-call">Call</span> <span class="legend-fold">Fold</span> <span class="legend-mixed">Mixed</span> </div>
         </div>
     </div>
 
@@ -81,15 +65,7 @@
     <div id="statsArea" class="stats-area">
         <h2>Statistikk (Lagres lokalt)</h2>
         <table id="statsTable">
-            <thead>
-                <tr>
-                    <th>Posisjon</th>
-                    <th>Totalt Valg</th>
-                    <th>Korrekt</th>
-                    <th>Feil</th>
-                    <th>% Riktig</th>
-                </tr>
-            </thead>
+            <thead> <tr> <th>Posisjon</th> <th>Totalt Valg</th> <th>Korrekt</th> <th>Feil</th> <th>% Riktig</th> </tr> </thead>
             <tbody></tbody>
         </table>
         <button id="resetStatsBtn">Nullstill Statistikk</button>
