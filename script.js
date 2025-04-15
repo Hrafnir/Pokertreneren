@@ -1,18 +1,18 @@
-// script.js (Versjon 15 / V2.7 - 6max default, Reverted Seat Pos Logic)
+// script.js (Versjon 15 / V2.8 - Seat Pos Fix, UI Moves, Range Title/Highlight Fix)
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Globale Variabler & Tilstand ---
     let currentDeck = []; let heroHand = []; let currentHeroPositionName = '';
     let currentDealerPositionIndex = -1; let currentScenario = 'RFI';
     let currentScenarioDescription = ''; let actionsPrecedingHero = [];
-    let numPlayers = 6; // NY DEFAULT: 6-max
+    let numPlayers = 6; // Default: 6-max
     let currentStackDepth = '40bb'; let currentTrainingMode = 'standard';
     let currentFixedPosition = null; let currentPotSizeBB = 1.5;
     let firstActionPlayerLogicalIndex = -1; let autoNewHandTimer = null;
     const HERO_LOGICAL_SEAT_INDEX = 0; let VISUAL_HERO_SEAT_INDEX = -1;
-    let lastHandPlayedInfo = {};
+    let lastHandPlayedInfo = {}; // Holder info om forrige spilte hånd
     let statistics = {};
-    let currentGameFormat = '6max_cash'; // NY DEFAULT
+    let currentGameFormat = '6max_cash'; // Default
 
     // --- DOM Elementer ---
     const scenarioButtonsContainer = document.querySelector('.scenario-buttons');
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ALL_POSITIONS = [...new Set([...positions9max, ...positions6max])];
 
     // --- Funksjoner ---
-    function calculateVisualHeroSeatIndex() { VISUAL_HERO_SEAT_INDEX = Math.floor(numPlayers / 2); console.log(`Visual Hero Seat Index: ${VISUAL_HERO_SEAT_INDEX} for ${numPlayers}p`); }
+    function calculateVisualHeroSeatIndex() { VISUAL_HERO_SEAT_INDEX = Math.floor(numPlayers / 2); /*console.log(`Visual Hero Seat Index: ${VISUAL_HERO_SEAT_INDEX} for ${numPlayers}p`);*/ }
     function createDeck() { const deck = []; for (const suit of suits) { for (const rank of ranks) { deck.push(rank + suit); } } return deck; }
     function shuffleDeck(deck) { for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; } return deck; }
     function getHandKey(cards) { if (!cards || cards.length !== 2) return null; const c1r = cards[0][0], c1s = cards[0][1]; const c2r = cards[1][0], c2s = cards[1][1]; const order = ranks.slice().reverse(); const i1 = order.indexOf(c1r), i2 = order.indexOf(c2r); const hR = i1 < i2 ? c1r : c2r; const lR = i1 < i2 ? c2r : c1r; const suited = c1s === c2s; if (hR === lR) return hR + lR; else return hR + lR + (suited ? 's' : 'o'); }
@@ -52,20 +52,21 @@ document.addEventListener('DOMContentLoaded', () => {
     function getActualSeatIndex(positionName, dealerIndex, numPlayers) { const positions = numPlayers === 9 ? positions9max : positions6max; if (dealerIndex < 0 || !positions || positions.length !== numPlayers) { /*console.error("Err getActualSeatIdx", positionName, dealerIndex, numPlayers);*/ return -1; } const listIndex = positions.indexOf(positionName); if (listIndex === -1) { /*console.warn(`Pos not found '${positionName}'`, numPlayers);*/ return -1; } const btnListIndex = positions.indexOf("BTN"); if (btnListIndex === -1) { console.error("BTN not found", numPlayers); return -1; } const stepsFromBtnInList = (listIndex - btnListIndex + numPlayers) % numPlayers; const actualSeatIndex = (dealerIndex + stepsFromBtnInList) % numPlayers; return actualSeatIndex; }
     function populatePositionSelect() { const positions = numPlayers === 9 ? positions9max : positions6max; positionSelect.innerHTML = ''; positions.forEach(pos => { const option = document.createElement('option'); option.value = pos; option.textContent = pos; positionSelect.appendChild(option); }); let defaultPos = "CO"; if (!positions.includes(defaultPos)) defaultPos = "BTN"; if (!positions.includes(defaultPos)) defaultPos = positions[Math.floor(positions.length / 2)]; positionSelect.value = defaultPos; currentFixedPosition = positionSelect.value; }
 
-    // TILBAKE TIL ENKLERE posisjoneringslogikk med rotasjon
+    // REVIDERT getSeatPosition (V13 / V2.5 style)
     function getSeatPosition(logicalSeatIndex, totalPlayers) {
         if (VISUAL_HERO_SEAT_INDEX === -1) calculateVisualHeroSeatIndex();
 
+        const angleOffset = -90; // Start top standard
         const angleIncrement = 360 / totalPlayers;
-        // Calculate the standard angle assuming seat 0 is at the top (-90 deg)
-        const standardAngle = -90 + logicalSeatIndex * angleIncrement;
 
-        // Calculate how much we need to rotate the entire table
-        // so that the VISUAL hero seat ends up at the bottom (90 deg)
-        const visualHeroStandardAngle = -90 + VISUAL_HERO_SEAT_INDEX * angleIncrement;
-        const rotationNeeded = 90 - visualHeroStandardAngle;
+        // Calculate the default angle for this logical seat
+        const standardAngle = angleOffset + logicalSeatIndex * angleIncrement;
 
-        // Apply the rotation to the standard angle of the current seat
+        // Calculate the rotation needed to place VISUAL_HERO_SEAT_INDEX at 90 degrees (bottom)
+        const currentVisualHeroAngle = angleOffset + VISUAL_HERO_SEAT_INDEX * angleIncrement;
+        const rotationNeeded = 90 - currentVisualHeroAngle;
+
+        // Apply rotation to the standard angle
         const finalAngle = standardAngle + rotationNeeded;
 
         const angleRad = finalAngle * (Math.PI / 180);
@@ -74,9 +75,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const left = 50 + radiusX * Math.cos(angleRad);
         const top = 50 + radiusY * Math.sin(angleRad);
 
+        // console.log(`Logical ${logicalSeatIndex} -> Final Angle ${finalAngle.toFixed(1)} -> Top ${top.toFixed(1)}%, Left ${left.toFixed(1)}%`);
         return { top: `${top}%`, left: `${left}%` };
     }
-
 
     function getButtonPosition(dealerVisualSeatElement) { if (!dealerVisualSeatElement) return { top: '50%', left: '50%' }; const tableRect = pokerTable.getBoundingClientRect(); const seatRect = dealerVisualSeatElement.getBoundingClientRect(); const seatCenterX = (seatRect.left + seatRect.width / 2) - tableRect.left; const seatCenterY = (seatRect.top + seatRect.height / 2) - tableRect.top; const tableCenterX = tableRect.width / 2; const tableCenterY = tableRect.height / 2; const angleRad = Math.atan2(seatCenterY - tableCenterY, seatCenterX - tableCenterX); const buttonOffset = 25; const btnLeft = seatCenterX + buttonOffset * Math.cos(angleRad) - dealerButtonElement.offsetWidth / 2; const btnTop = seatCenterY + buttonOffset * Math.sin(angleRad) - dealerButtonElement.offsetHeight / 2; return { top: `${btnTop}px`, left: `${btnLeft}px` }; }
     function setupTableUI() { if (VISUAL_HERO_SEAT_INDEX === -1) calculateVisualHeroSeatIndex(); pokerTable.innerHTML = ''; pokerTable.appendChild(dealerButtonElement); pokerTable.appendChild(potDisplaySpan.parentNode); pokerTable.appendChild(scenarioDescriptionElement); let opponentCounter = 1; for (let i = 0; i < numPlayers; i++) { const seatDiv = document.createElement('div'); seatDiv.classList.add('seat'); seatDiv.dataset.seatId = i; const pos = getSeatPosition(i, numPlayers); seatDiv.style.left = pos.left; seatDiv.style.top = pos.top; let playerInfoHTML = ''; if (i === HERO_LOGICAL_SEAT_INDEX) { seatDiv.classList.add('hero-seat'); playerInfoHTML = `<div class="player-cards"></div>`; } else { const playerName = `Spiller ${opponentCounter++}`; playerInfoHTML = `<div class="player-info"><span class="player-name">${playerName}</span><span class="player-position">--</span></div><div class="player-cards"><div class="card card-placeholder"></div><div class="card card-placeholder"></div></div><span class="player-action"></span>`; } seatDiv.innerHTML = `<div class="seat-content">${playerInfoHTML}</div>`; pokerTable.appendChild(seatDiv); } }
@@ -93,8 +94,63 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateStatistics(position, isCorrect) { if (!position || position === '??') { console.warn("Invalid pos for stats:", position); return; } if (!statistics[position]) { statistics[position] = { total: 0, correct: 0, incorrect: 0 }; } statistics[position].total++; statistics.Total.total++; if (isCorrect) { statistics[position].correct++; statistics.Total.correct++; } else { statistics[position].incorrect++; statistics.Total.incorrect++; } }
     function displayStatistics() { if (!statsTableBody) return; statsTableBody.innerHTML = ''; const sortedPositions = [...ALL_POSITIONS].sort((a, b) => { const order = positions9max; return order.indexOf(a) - order.indexOf(b); }); const displayOrder = [...sortedPositions, 'Total']; displayOrder.forEach(pos => { const stats = statistics[pos]; if (!stats || stats.total === 0) return; const percentage = (stats.total > 0) ? ((stats.correct / stats.total) * 100).toFixed(1) : '0.0'; const row = statsTableBody.insertRow(); row.insertCell().textContent = pos; row.insertCell().textContent = stats.total; row.insertCell().textContent = stats.correct; row.insertCell().textContent = stats.incorrect; row.insertCell().textContent = `${percentage}%`; }); }
     function resetStatistics() { if (confirm("Slette all statistikk?")) { initializeStatistics(); saveStatistics(); displayStatistics(); console.log("Stats reset."); } }
-    function handleUserAction(userActionCode) { /* ... (uendret fra V12) ... */ clearTimeout(autoNewHandTimer); const handKey = getHandKey(heroHand); if (!handKey || !currentHeroPositionName || currentHeroPositionName === '??') { console.error("Invalid state handleUserAction", {handKey, currentHeroPositionName}); return; } console.log(`Handling: ${currentStackDepth}, ${numPlayers}max, ${currentHeroPositionName}, ${currentScenario}, Hand: ${handKey}, Action: ${userActionCode}`); const infoForRangeDisplay = { ...lastHandPlayedInfo }; const gtoActionObject = getGtoAction(infoForRangeDisplay.stack, infoForRangeDisplay.players, infoForRangeDisplay.pos, infoForRangeDisplay.scenario, handKey); if (!gtoActionObject) { console.error("Failed GTO obj."); feedbackText.textContent = "Error: No GTO data."; feedbackText.className = 'incorrect'; return; } const actions = Object.keys(gtoActionObject); const frequencies = Object.values(gtoActionObject); let feedback = '', correctActionDescription = '', isCorrect = false, primaryAction = 'F', primaryFreq = 0; if (actions.length > 0) { actions.forEach((act, i) => { if (frequencies[i] > primaryFreq) { primaryFreq = frequencies[i]; primaryAction = act; } }); } else { primaryAction = 'F'; primaryFreq = 1.0; gtoActionObject['F'] = 1.0; actions.push('F'); frequencies.push(1.0); } let normalizedUserAction = userActionCode; if (currentScenario === 'RFI' && currentStackDepth === '10bb' && userActionCode === 'P') normalizedUserAction = 'P'; else if (currentScenario === 'RFI' && userActionCode === 'R') normalizedUserAction = 'R'; else if (currentScenario.startsWith('vs_') && currentStackDepth === '10bb' && userActionCode === 'P') normalizedUserAction = 'P'; else if (currentScenario.startsWith('vs_') && userActionCode === '3B') normalizedUserAction = '3B'; else if (currentScenario.startsWith('vs_') && userActionCode === 'C') normalizedUserAction = 'C'; else if (userActionCode === 'F') normalizedUserAction = 'F'; else normalizedUserAction = userActionCode; if (gtoActionObject[normalizedUserAction] && gtoActionObject[normalizedUserAction] > 0) { isCorrect = true; if (normalizedUserAction === primaryAction && gtoActionObject[normalizedUserAction] >= 0.85) { feedback = "Korrekt!"; feedbackText.className = 'correct'; } else if (actions.length > 1 && frequencies.filter(f => f > 0).length > 1) { feedback = "OK (Mixed Strategi)"; feedbackText.className = 'correct'; } else { feedback = "Korrekt!"; feedbackText.className = 'correct'; } } else { feedback = "Feil!"; feedbackText.className = 'incorrect'; isCorrect = false; } correctActionDescription = "Anbefalt GTO: "; let actionStrings = []; Object.entries(gtoActionObject).forEach(([act, freq]) => { if (freq > 0) { let percentage = (freq * 100).toFixed(0); if (actions.length === 1 || freq === 1.0) percentage = "100"; actionStrings.push(`${act} (${percentage}%)`); } }); if (actionStrings.length === 0) actionStrings.push("F (100%)"); correctActionDescription += actionStrings.join(', '); if (!isCorrect && actions.length > 1 && frequencies.filter(f => f > 0).length > 1) correctActionDescription += ` (Primær: ${primaryAction})`; else if (!isCorrect && actions.length >= 1 && primaryAction !== 'F') { if (gtoActionObject[primaryAction] === 1.0) correctActionDescription += ` (Du burde valgt ${primaryAction})`; else correctActionDescription += ` (Primær: ${primaryAction})`; } feedbackText.textContent = feedback; correctActionText.textContent = correctActionDescription; updateStatistics(infoForRangeDisplay.pos, isCorrect); saveStatistics(); displayStatistics(); displayRangeGridForSituation(infoForRangeDisplay.stack, infoForRangeDisplay.players, infoForRangeDisplay.pos, infoForRangeDisplay.scenario, infoForRangeDisplay.hand); rangeTitleElement.textContent = `Range for Forrige Hånd (${infoForRangeDisplay.pos || '--'}):`; const delaySeconds = parseInt(delayInput.value, 10); if (!isNaN(delaySeconds) && delaySeconds >= 0) { console.log(`Starting ${delaySeconds}s timer...`); autoNewHandTimer = setTimeout(() => { console.log("Auto-starting new hand."); setupNewHand(); }, delaySeconds * 1000); } else { console.log("Invalid delay, auto new hand disabled."); } actionButtonsContainer.querySelectorAll('button').forEach(b => b.disabled = true); }
-    function displayRangeGridForSituation(stack, players, pos, scenario, heroHandKey) { /* ... (uendret fra V12) ... */ rangeGrid.innerHTML = ''; const oldHighlights = rangeGrid.querySelectorAll('.highlight-hand'); oldHighlights.forEach(cell => cell.classList.remove('highlight-hand')); const fullRange = getFullRange(stack, players, pos, scenario); rangeSituationInfo.textContent = `${stack} ${players}max - ${pos} - Scenario: ${scenario}`; if (!fullRange || Object.keys(fullRange).length === 0) { rangeGrid.innerHTML = `<p style="grid-column: span 13; text-align: center; color: red;">Error: Range not loaded for ${pos} ${scenario} (${stack}, ${players}max).</p>`; rangeDisplayContainer.style.display = 'block'; return; } const ranksRev = ranks.slice().reverse(); ranksRev.forEach((rank1, index1) => { ranksRev.forEach((rank2, index2) => { const cell = document.createElement('div'); cell.classList.add('range-cell'); let handKey; if (index1 === index2) handKey = rank1 + rank2; else if (index1 < index2) handKey = rank1 + rank2 + 's'; else handKey = rank2 + rank1 + 'o'; let displayText = '', displayRank1 = rank1 === 'T' ? '10' : rank1, displayRank2 = rank2 === 'T' ? '10' : rank2; if (index1 === index2) displayText = displayRank1 + displayRank2; else if (index1 < index2) displayText = displayRank1 + displayRank2; else displayText = displayRank2 + displayRank1; cell.textContent = displayText; cell.dataset.handkey = handKey; const gtoAction = fullRange[handKey] || { "F": 1.0 }; const actions = Object.keys(gtoAction); const frequencies = Object.values(gtoAction); let tooltipText = `${handKey}:\n`, primaryAction = 'F', isMixed = false, primaryFreq = 0; if (actions.length > 0) { actions.forEach((act, i) => { if (frequencies[i] > primaryFreq) { primaryFreq = frequencies[i]; primaryAction = act; } }); isMixed = frequencies.filter(f => f > 0).length > 1; } else { primaryAction = 'F'; gtoAction['F'] = 1.0; } let actionStrings = []; Object.entries(gtoAction).forEach(([act, freq]) => { if (freq > 0) actionStrings.push(`${act}: ${(freq * 100).toFixed(0)}%`); }); if (actionStrings.length === 0) actionStrings.push("F: 100%"); tooltipText += actionStrings.join('\n'); if (isMixed) cell.classList.add('range-mixed'); else if (['R', '3B', 'P'].includes(primaryAction)) cell.classList.add('range-raise'); else if (primaryAction === 'C') cell.classList.add('range-call'); else cell.classList.add('range-fold'); const tooltipSpan = document.createElement('span'); tooltipSpan.classList.add('tooltiptext'); tooltipSpan.textContent = tooltipText; cell.appendChild(tooltipSpan); rangeGrid.appendChild(cell); }); }); if(heroHandKey) { const heroCell = rangeGrid.querySelector(`[data-handkey="${heroHandKey}"]`); if(heroCell) { heroCell.classList.add('highlight-hand'); } else { console.warn(`Could not find cell for highlight: ${heroHandKey}`); } } rangeDisplayContainer.style.display = 'block'; }
+
+    // REVIDERT: Bruker korrekt lastHandPlayedInfo for tittel
+    function handleUserAction(userActionCode) {
+        clearTimeout(autoNewHandTimer);
+        const handKey = getHandKey(heroHand); if (!handKey || !currentHeroPositionName || currentHeroPositionName === '??') { console.error("Invalid state handleUserAction", {handKey, currentHeroPositionName}); return; }
+        console.log(`Handling: ${currentStackDepth}, ${numPlayers}max, ${currentHeroPositionName}, ${currentScenario}, Hand: ${handKey}, Action: ${userActionCode}`);
+
+        // Bruk info fra DA hånden startet (lastHandPlayedInfo) for GTO-oppslag og Range-visning
+        const infoForRangeDisplay = { ...lastHandPlayedInfo };
+
+        const gtoActionObject = getGtoAction(infoForRangeDisplay.stack, infoForRangeDisplay.players, infoForRangeDisplay.pos, infoForRangeDisplay.scenario, handKey); if (!gtoActionObject) { console.error("Failed GTO obj."); feedbackText.textContent = "Error: No GTO data."; feedbackText.className = 'incorrect'; return; }
+
+        // --- Feedback Logic (uendret) ---
+        const actions = Object.keys(gtoActionObject); const frequencies = Object.values(gtoActionObject); let feedback = '', correctActionDescription = '', isCorrect = false, primaryAction = 'F', primaryFreq = 0; if (actions.length > 0) { actions.forEach((act, i) => { if (frequencies[i] > primaryFreq) { primaryFreq = frequencies[i]; primaryAction = act; } }); } else { primaryAction = 'F'; primaryFreq = 1.0; gtoActionObject['F'] = 1.0; actions.push('F'); frequencies.push(1.0); } let normalizedUserAction = userActionCode; if (currentScenario === 'RFI' && currentStackDepth === '10bb' && userActionCode === 'P') normalizedUserAction = 'P'; else if (currentScenario === 'RFI' && userActionCode === 'R') normalizedUserAction = 'R'; else if (currentScenario.startsWith('vs_') && currentStackDepth === '10bb' && userActionCode === 'P') normalizedUserAction = 'P'; else if (currentScenario.startsWith('vs_') && userActionCode === '3B') normalizedUserAction = '3B'; else if (currentScenario.startsWith('vs_') && userActionCode === 'C') normalizedUserAction = 'C'; else if (userActionCode === 'F') normalizedUserAction = 'F'; else normalizedUserAction = userActionCode; if (gtoActionObject[normalizedUserAction] && gtoActionObject[normalizedUserAction] > 0) { isCorrect = true; if (normalizedUserAction === primaryAction && gtoActionObject[normalizedUserAction] >= 0.85) { feedback = "Korrekt!"; feedbackText.className = 'correct'; } else if (actions.length > 1 && frequencies.filter(f => f > 0).length > 1) { feedback = "OK (Mixed Strategi)"; feedbackText.className = 'correct'; } else { feedback = "Korrekt!"; feedbackText.className = 'correct'; } } else { feedback = "Feil!"; feedbackText.className = 'incorrect'; isCorrect = false; } correctActionDescription = "Anbefalt GTO: "; let actionStrings = []; Object.entries(gtoActionObject).forEach(([act, freq]) => { if (freq > 0) { let percentage = (freq * 100).toFixed(0); if (actions.length === 1 || freq === 1.0) percentage = "100"; actionStrings.push(`${act} (${percentage}%)`); } }); if (actionStrings.length === 0) actionStrings.push("F (100%)"); correctActionDescription += actionStrings.join(', '); if (!isCorrect && actions.length > 1 && frequencies.filter(f => f > 0).length > 1) correctActionDescription += ` (Primær: ${primaryAction})`; else if (!isCorrect && actions.length >= 1 && primaryAction !== 'F') { if (gtoActionObject[primaryAction] === 1.0) correctActionDescription += ` (Du burde valgt ${primaryAction})`; else correctActionDescription += ` (Primær: ${primaryAction})`; }
+        feedbackText.textContent = feedback; correctActionText.textContent = correctActionDescription;
+
+        // --- Oppdater statistikk ---
+        updateStatistics(infoForRangeDisplay.pos, isCorrect); // Bruk pos fra forrige hånd
+        saveStatistics(); displayStatistics();
+
+        // --- Vis Range & Start Timer ---
+        displayRangeGridForSituation(infoForRangeDisplay.stack, infoForRangeDisplay.players, infoForRangeDisplay.pos, infoForRangeDisplay.scenario, infoForRangeDisplay.hand); // Send med handKey
+        // Setter korrekt tittel for forrige hånd
+        rangeTitleElement.textContent = `Range for Forrige Hånd (${infoForRangeDisplay.pos || '--'}):`;
+
+        const delaySeconds = parseInt(delayInput.value, 10);
+        if (!isNaN(delaySeconds) && delaySeconds >= 0) { console.log(`Starting ${delaySeconds}s timer...`); autoNewHandTimer = setTimeout(() => { console.log("Auto-starting new hand."); setupNewHand(); }, delaySeconds * 1000); }
+        else { console.log("Invalid delay, auto new hand disabled."); }
+        actionButtonsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
+    }
+
+    // REVIDERT: Tar imot heroHandKey
+    function displayRangeGridForSituation(stack, players, pos, scenario, heroHandKey) {
+        rangeGrid.innerHTML = '';
+        // Fjern gammel highlight FØR nytt grid lages
+        const oldHighlights = rangeGrid.querySelectorAll('.highlight-hand');
+        oldHighlights.forEach(cell => cell.classList.remove('highlight-hand'));
+
+        const fullRange = getFullRange(stack, players, pos, scenario);
+        rangeSituationInfo.textContent = `${stack} ${players}max - ${pos} - Scenario: ${scenario}`;
+        if (!fullRange || Object.keys(fullRange).length === 0) { rangeGrid.innerHTML = `<p style="grid-column: span 13; text-align: center; color: red;">Error: Range not loaded for ${pos} ${scenario} (${stack}, ${players}max).</p>`; rangeDisplayContainer.style.display = 'block'; return; }
+        const ranksRev = ranks.slice().reverse(); ranksRev.forEach((rank1, index1) => { ranksRev.forEach((rank2, index2) => { const cell = document.createElement('div'); cell.classList.add('range-cell'); let handKey; if (index1 === index2) handKey = rank1 + rank2; else if (index1 < index2) handKey = rank1 + rank2 + 's'; else handKey = rank2 + rank1 + 'o'; let displayText = '', displayRank1 = rank1 === 'T' ? '10' : rank1, displayRank2 = rank2 === 'T' ? '10' : rank2; if (index1 === index2) displayText = displayRank1 + displayRank2; else if (index1 < index2) displayText = displayRank1 + displayRank2; else displayText = displayRank2 + displayRank1; cell.textContent = displayText; cell.dataset.handkey = handKey; const gtoAction = fullRange[handKey] || { "F": 1.0 }; const actions = Object.keys(gtoAction); const frequencies = Object.values(gtoAction); let tooltipText = `${handKey}:\n`, primaryAction = 'F', isMixed = false, primaryFreq = 0; if (actions.length > 0) { actions.forEach((act, i) => { if (frequencies[i] > primaryFreq) { primaryFreq = frequencies[i]; primaryAction = act; } }); isMixed = frequencies.filter(f => f > 0).length > 1; } else { primaryAction = 'F'; gtoAction['F'] = 1.0; } let actionStrings = []; Object.entries(gtoAction).forEach(([act, freq]) => { if (freq > 0) actionStrings.push(`${act}: ${(freq * 100).toFixed(0)}%`); }); if (actionStrings.length === 0) actionStrings.push("F: 100%"); tooltipText += actionStrings.join('\n'); if (isMixed) cell.classList.add('range-mixed'); else if (['R', '3B', 'P'].includes(primaryAction)) cell.classList.add('range-raise'); else if (primaryAction === 'C') cell.classList.add('range-call'); else cell.classList.add('range-fold'); const tooltipSpan = document.createElement('span'); tooltipSpan.classList.add('tooltiptext'); tooltipSpan.textContent = tooltipText; cell.appendChild(tooltipSpan); rangeGrid.appendChild(cell); }); });
+
+        // NYTT: Highlight hero's hand etter at gridet er laget
+        if(heroHandKey) {
+             const heroCell = rangeGrid.querySelector(`[data-handkey="${heroHandKey}"]`);
+             if(heroCell) {
+                 heroCell.classList.add('highlight-hand');
+                 console.log(`Highlighting cell for hand: ${heroHandKey}`);
+             } else { console.warn(`Could not find cell to highlight for hand: ${heroHandKey}`); }
+        } else {
+             console.log("No heroHandKey provided to highlight.");
+        }
+
+        rangeDisplayContainer.style.display = 'block';
+    }
+
 
     // --- Event Listeners ---
     scenarioButtonsContainer.addEventListener('click', (e) => { if (e.target.classList.contains('scenario-btn')) { clearTimeout(autoNewHandTimer); const scenarioType = e.target.dataset.scenarioType; currentGameFormat = scenarioType; if (scenarioType.startsWith('6max')) { numPlayers = 6; } else if (scenarioType.startsWith('9max')) { numPlayers = 9; } console.log(`Scenario selected: ${scenarioType}, Num Players: ${numPlayers}`); scenarioButtonsContainer.querySelectorAll('.scenario-btn').forEach(btn => btn.classList.remove('active')); e.target.classList.add('active'); calculateVisualHeroSeatIndex(); setupTableUI(); populatePositionSelect(); setupNewHand(); } });
@@ -107,9 +163,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Initialisering ---
     function initializeApp() {
-        console.log("Initializing Poker Trainer V2.5 + Stats...");
-        calculateVisualHeroSeatIndex(); // Kalkuler basert på default numPlayers
-        initializeStatistics(); loadStatistics();
+        console.log("Initializing Poker Trainer V2.6 + Stats...");
+        calculateVisualHeroSeatIndex(); initializeStatistics(); loadStatistics();
         const defaultScenarioBtn = scenarioButtonsContainer.querySelector(`[data-scenario-type="${currentGameFormat}"]`);
         if(defaultScenarioBtn) defaultScenarioBtn.classList.add('active');
         else { const firstBtn = scenarioButtonsContainer.querySelector('.scenario-btn'); if(firstBtn) { firstBtn.classList.add('active'); currentGameFormat = firstBtn.dataset.scenarioType; numPlayers = currentGameFormat.startsWith('6max') ? 6 : 9; calculateVisualHeroSeatIndex(); } }
