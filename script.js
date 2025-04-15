@@ -1,7 +1,7 @@
-// script.js (Versjon 11 - Fix Range Title, Card Symbols, Centering)
+// script.js (Versjon 12 / V2.4 - Korrigert spillerposisjonering)
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Globale Variabler & Tilstand ---
+    // --- Globale Variabler & Tilstand (som V2.3) ---
     let currentDeck = []; let heroHand = []; let currentHeroPositionName = '';
     let currentDealerPositionIndex = -1; let currentScenario = 'RFI';
     let currentScenarioDescription = ''; let actionsPrecedingHero = [];
@@ -9,12 +9,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentFixedPosition = null; let currentPotSizeBB = 1.5;
     let firstActionPlayerLogicalIndex = -1; let autoNewHandTimer = null;
     const HERO_LOGICAL_SEAT_INDEX = 0; let VISUAL_HERO_SEAT_INDEX = -1;
-    let lastHandPlayedInfo = {}; // Store previous hand info for range display title
+    let lastHandPlayedInfo = {};
 
-    // --- DOM Elementer ---
+    // --- DOM Elementer (som V2.3) ---
     const gameTypeSelect = document.getElementById('gameType'); const stackDepthSelect = document.getElementById('stackDepth'); const trainingModeSelect = document.getElementById('trainingMode'); const positionLabel = document.getElementById('positionLabel'); const positionSelect = document.getElementById('positionSelect'); const delayInput = document.getElementById('delayInput'); const newHandBtn = document.getElementById('newHandBtn'); const pokerTable = document.querySelector('.poker-table'); const heroPositionSpan = document.getElementById('heroPosition'); const actionButtonsContainer = document.querySelector('.action-buttons'); const feedbackText = document.getElementById('feedbackText'); const correctActionText = document.getElementById('correctActionText'); const rangeDisplayContainer = document.getElementById('rangeDisplayContainer'); const rangeTitleElement = document.getElementById('rangeTitle'); const rangeGrid = document.getElementById('rangeGrid'); const potDisplaySpan = document.querySelector('.pot-display span'); const dealerButtonElement = document.querySelector('.dealer-button'); const scenarioDescriptionElement = document.getElementById('scenarioDescription'); const rangeSituationInfo = document.getElementById('rangeSituationInfo');
+    const accumulatedOutputArea = document.getElementById('accumulatedOutputArea'); const addToSessionBtn = document.getElementById('addToSessionBtn'); const clearSessionBtn = document.getElementById('clearSessionBtn');
 
-    // --- Konstanter ---
+
+    // --- Konstanter (som V2.3) ---
     const suits = ['c', 'd', 'h', 's']; const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
     const positions9max = ["UTG", "UTG+1", "MP", "MP+1", "HJ", "CO", "BTN", "SB", "BB"]; const positions6max = ["UTG", "MP", "CO", "BTN", "SB", "BB"];
 
@@ -27,53 +29,45 @@ document.addEventListener('DOMContentLoaded', () => {
     function getActualSeatIndex(positionName, dealerIndex, numPlayers) { const positions = numPlayers === 9 ? positions9max : positions6max; if (dealerIndex < 0 || !positions || positions.length !== numPlayers) { console.error("Err getActualSeatIdx", positionName, dealerIndex, numPlayers); return -1; } const listIndex = positions.indexOf(positionName); if (listIndex === -1) { /*console.warn(`Pos not found '${positionName}'`, numPlayers);*/ return -1; } const btnListIndex = positions.indexOf("BTN"); if (btnListIndex === -1) { console.error("BTN not found", numPlayers); return -1; } const stepsFromBtnInList = (listIndex - btnListIndex + numPlayers) % numPlayers; const actualSeatIndex = (dealerIndex + stepsFromBtnInList) % numPlayers; return actualSeatIndex; }
     function populatePositionSelect() { const positions = numPlayers === 9 ? positions9max : positions6max; positionSelect.innerHTML = ''; positions.forEach(pos => { const option = document.createElement('option'); option.value = pos; option.textContent = pos; positionSelect.appendChild(option); }); let defaultPos = "CO"; if (!positions.includes(defaultPos)) defaultPos = "BTN"; if (!positions.includes(defaultPos)) defaultPos = positions[Math.floor(positions.length / 2)]; positionSelect.value = defaultPos; currentFixedPosition = positionSelect.value; }
 
-    // Beregner VISUELL plassering, tvinger Hero til midten horisontalt
+    // REVIDERT for bedre symmetri
     function getSeatPosition(logicalSeatIndex, totalPlayers) {
         if (VISUAL_HERO_SEAT_INDEX === -1) calculateVisualHeroSeatIndex();
-        const angleOffset = -90; const angleIncrement = 360 / totalPlayers;
-        const visualIndexOffset = (logicalSeatIndex - HERO_LOGICAL_SEAT_INDEX + totalPlayers) % totalPlayers;
-        const targetVisualIndex = (VISUAL_HERO_SEAT_INDEX + visualIndexOffset) % totalPlayers;
-        const angle = angleOffset + targetVisualIndex * angleIncrement;
-        const angleRad = angle * (Math.PI / 180); const radiusX = 45; const radiusY = 42;
-        let left = 50 + radiusX * Math.cos(angleRad);
+
+        const angleOffset = -90; // Start top
+        const angleIncrement = 360 / totalPlayers;
+
+        // Calculate the visual slot index where this logical seat should appear
+        // Logical 0 (Hero) appears at VISUAL_HERO_SEAT_INDEX
+        // Logical 1 appears at VISUAL_HERO_SEAT_INDEX + 1, etc.
+        const targetVisualSlot = (VISUAL_HERO_SEAT_INDEX + logicalSeatIndex) % totalPlayers;
+
+        // Calculate the angle for that target visual slot
+        const angle = angleOffset + targetVisualSlot * angleIncrement;
+
+        const angleRad = angle * (Math.PI / 180);
+        const radiusX = 45; // Width radius of the oval
+        const radiusY = 42; // Height radius of the oval
+        const left = 50 + radiusX * Math.cos(angleRad);
         const top = 50 + radiusY * Math.sin(angleRad);
 
-        // Force horizontal center ONLY for the visual hero seat index
-        if (targetVisualIndex === VISUAL_HERO_SEAT_INDEX) {
-             left = 50; // Override calculated left
-             console.log(`Forcing left=50% for Hero (Logical: ${logicalSeatIndex}, Visual: ${targetVisualIndex})`);
-        }
+        // !! Fjernet overstyring av left=50% for Hero !!
+        // Den naturlige vinkelberegningen for VISUAL_HERO_SEAT_INDEX
+        // plasserer den nederst på ovalen.
+
+        // console.log(`Logical ${logicalSeatIndex} -> Visual ${targetVisualSlot} -> Angle ${angle.toFixed(1)} -> Top ${top.toFixed(1)}%, Left ${left.toFixed(1)}%`); // Debugging
+
         return { top: `${top}%`, left: `${left}%` };
     }
+
 
     function getButtonPosition(dealerVisualSeatElement) { if (!dealerVisualSeatElement) return { top: '50%', left: '50%' }; const tableRect = pokerTable.getBoundingClientRect(); const seatRect = dealerVisualSeatElement.getBoundingClientRect(); const seatCenterX = (seatRect.left + seatRect.width / 2) - tableRect.left; const seatCenterY = (seatRect.top + seatRect.height / 2) - tableRect.top; const tableCenterX = tableRect.width / 2; const tableCenterY = tableRect.height / 2; const angleRad = Math.atan2(seatCenterY - tableCenterY, seatCenterX - tableCenterX); const buttonOffset = 25; const btnLeft = seatCenterX + buttonOffset * Math.cos(angleRad) - dealerButtonElement.offsetWidth / 2; const btnTop = seatCenterY + buttonOffset * Math.sin(angleRad) - dealerButtonElement.offsetHeight / 2; return { top: `${btnTop}px`, left: `${btnLeft}px` }; }
     function setupTableUI() { if (VISUAL_HERO_SEAT_INDEX === -1) calculateVisualHeroSeatIndex(); pokerTable.innerHTML = ''; pokerTable.appendChild(dealerButtonElement); pokerTable.appendChild(potDisplaySpan.parentNode); pokerTable.appendChild(scenarioDescriptionElement); let opponentCounter = 1; for (let i = 0; i < numPlayers; i++) { const seatDiv = document.createElement('div'); seatDiv.classList.add('seat'); seatDiv.dataset.seatId = i; const pos = getSeatPosition(i, numPlayers); seatDiv.style.left = pos.left; seatDiv.style.top = pos.top; let playerInfoHTML = ''; if (i === HERO_LOGICAL_SEAT_INDEX) { seatDiv.classList.add('hero-seat'); playerInfoHTML = `<div class="player-cards"></div>`; } else { const playerName = `Spiller ${opponentCounter++}`; playerInfoHTML = `<div class="player-info"><span class="player-name">${playerName}</span><span class="player-position">--</span></div><div class="player-cards"><div class="card card-placeholder"></div><div class="card card-placeholder"></div></div><span class="player-action"></span>`; } seatDiv.innerHTML = `<div class="seat-content">${playerInfoHTML}</div>`; pokerTable.appendChild(seatDiv); } }
     function updatePlayerPositionsRelativeToButton() { if (currentDealerPositionIndex < 0) { console.error("Dealer pos not set"); return; } const seats = pokerTable.querySelectorAll('.seat'); seats.forEach((seat) => { const logicalSeatIndex = parseInt(seat.dataset.seatId); const positionName = calculatePositionName(logicalSeatIndex, currentDealerPositionIndex, numPlayers); const positionSpan = seat.querySelector('.player-position'); if (positionSpan) positionSpan.textContent = positionName; updateSeatActionVisuals(seat, null); seat.classList.remove('action-on'); }); heroPositionSpan.textContent = currentHeroPositionName; const dealerVisualSeatElement = pokerTable.querySelector(`.seat[data-seat-id="${currentDealerPositionIndex}"]`); if (dealerVisualSeatElement) { const btnPos = getButtonPosition(dealerVisualSeatElement); dealerButtonElement.style.top = btnPos.top; dealerButtonElement.style.left = btnPos.left; } else { dealerButtonElement.style.top = '10%'; dealerButtonElement.style.left = '10%'; } if (firstActionPlayerLogicalIndex !== -1) { const actionSeatElement = pokerTable.querySelector(`.seat[data-seat-id="${firstActionPlayerLogicalIndex}"]`); if (actionSeatElement) actionSeatElement.classList.add('action-on'); } }
     function getCardComponents(cardString) { if (!cardString || cardString.length < 2) return { rank: '?', suit: '', suitClass: '' }; const rank = cardString.slice(0, -1), suitCode = cardString.slice(-1); let suitSymbol = '', suitClass = ''; switch (suitCode) { case 's': suitSymbol = '♠'; suitClass = 'spades'; break; case 'h': suitSymbol = '♥'; suitClass = 'hearts'; break; case 'd': suitSymbol = '♦'; suitClass = 'diamonds'; break; case 'c': suitSymbol = '♣'; suitClass = 'clubs'; break; default: suitSymbol = '?'; } let displayRank = rank === 'T' ? '10' : rank; return { rank: displayRank, suit: suitSymbol, suitClass: suitClass }; }
-
-    // Viser Hero sine kort - KUN med rank og midt-symbol
-    function displayHeroCards() {
-        const heroVisualSeat = pokerTable.querySelector(`.seat[data-seat-id="${HERO_LOGICAL_SEAT_INDEX}"]`); if (!heroVisualSeat) { console.error("No Hero seat"); return; }
-        const cardsContainer = heroVisualSeat.querySelector('.player-cards'); if (!cardsContainer) { console.error("No cards container in Hero seat"); return; }
-        cardsContainer.innerHTML = '';
-        if (heroHand.length === 2) {
-            heroHand.forEach(card => {
-                const components = getCardComponents(card);
-                const cardDiv = document.createElement('div');
-                cardDiv.classList.add('card', components.suitClass); // Fargeklasse på kortet
-                // Oppdatert innerHTML for KUN rank og midt-symbol
-                cardDiv.innerHTML = `
-                    <div class="card-rank-overlay card-top-left-rank">${components.rank}</div>
-                    <div class="card-suit card-suit-center">${components.suit}</div>
-                    <div class="card-rank-overlay card-bottom-right-rank">${components.rank}</div>`;
-                cardsContainer.appendChild(cardDiv);
-            });
-        } else { cardsContainer.innerHTML = `<div class="card card-placeholder"></div><div class="card card-placeholder"></div>`; }
-    }
-
-    function updateSeatActionVisuals(seatElement, actionInfo) { /* ... (uendret) ... */ if (!seatElement) return; const actionSpan = seatElement.querySelector('.player-action'); const playerCardsDiv = seatElement.querySelector('.player-cards'); const isHero = seatElement.classList.contains('hero-seat'); seatElement.classList.remove('seat-folded', 'seat-called', 'seat-raised', 'seat-3bet', 'seat-pushed', 'seat-posted-blind'); if (actionSpan) { actionSpan.className = 'player-action'; actionSpan.textContent = ''; } if (playerCardsDiv && !isHero) { playerCardsDiv.style.opacity = '1'; playerCardsDiv.innerHTML = `<div class="card card-placeholder"></div><div class="card card-placeholder"></div>`; } if (!actionInfo) return; let actionText = '', actionClassSuffix = '', seatClassSuffix = '', cardClassSuffix = ''; switch (actionInfo.actionType.toUpperCase()) { case 'FOLD': actionText = 'Fold'; actionClassSuffix = 'fold'; seatClassSuffix = 'folded'; cardClassSuffix = 'folded'; if (playerCardsDiv && !isHero) { playerCardsDiv.innerHTML = ''; } break; case 'CALL': actionText = `Call ${actionInfo.amount} BB`; actionClassSuffix = 'call'; seatClassSuffix = 'called'; cardClassSuffix = 'called'; break; case 'RAISE': actionText = `Raise ${actionInfo.amount} BB`; actionClassSuffix = 'raise'; seatClassSuffix = 'raised'; cardClassSuffix = 'raised'; break; case '3B': actionText = `3-Bet ${actionInfo.amount} BB`; actionClassSuffix = '3bet'; seatClassSuffix = 'raised'; cardClassSuffix = '3bet'; break; case 'PUSH': actionText = `Push ${actionInfo.amount} BB`; actionClassSuffix = 'push'; seatClassSuffix = 'pushed'; cardClassSuffix = 'pushed'; break; case 'POST_SB': case 'POST_BB': actionText = `Post ${actionInfo.amount} BB`; actionClassSuffix = 'post'; seatClassSuffix = 'posted-blind'; break; default: actionText = actionInfo.actionType; } if (actionSpan) { actionSpan.textContent = actionText; if (actionClassSuffix) actionSpan.classList.add(`action-${actionClassSuffix}`); } if (seatClassSuffix) seatElement.classList.add(`seat-${seatClassSuffix}`); if (cardClassSuffix && playerCardsDiv && !isHero && cardClassSuffix !== 'folded') { playerCardsDiv.querySelectorAll('.card').forEach(card => { card.classList.remove('card-placeholder'); card.classList.remove('card-folded', 'card-called', 'card-raised', 'card-3bet', 'card-pushed'); card.classList.add(`card-${cardClassSuffix}`); card.innerHTML = ''; }); } }
-    function displayPrecedingActions() { /* ... (uendret) ... */ console.log("[displayPrecedingActions] Called. Actions:", JSON.stringify(actionsPrecedingHero)); pokerTable.querySelectorAll('.seat:not(.hero-seat)').forEach(seat => { updateSeatActionVisuals(seat, null); seat.classList.remove('action-on'); }); const heroSeat = pokerTable.querySelector('.hero-seat'); if (heroSeat) { const actionSpan = heroSeat.querySelector('.player-action'); if (actionSpan) { actionSpan.className = 'player-action'; actionSpan.textContent = ''; } heroSeat.classList.remove('seat-folded', 'seat-called', 'seat-raised', 'seat-3bet', 'seat-pushed', 'seat-posted-blind', 'action-on'); } actionsPrecedingHero.forEach(actionInfo => { const logicalSeatIndex = getActualSeatIndex(actionInfo.position, currentDealerPositionIndex, numPlayers); if (logicalSeatIndex === -1) { console.warn(`Skipping unknown pos: ${actionInfo.position}`); return; } const seatElement = pokerTable.querySelector(`.seat[data-seat-id="${logicalSeatIndex}"]`); if (seatElement) { console.log(`Updating seat ${logicalSeatIndex} (${actionInfo.position}) with action: ${actionInfo.actionType}`); updateSeatActionVisuals(seatElement, actionInfo); } else { console.warn(`No seat element for logical index ${logicalSeatIndex}`); } }); if (firstActionPlayerLogicalIndex !== -1) { const actionSeatElement = pokerTable.querySelector(`.seat[data-seat-id="${firstActionPlayerLogicalIndex}"]`); if (actionSeatElement) { console.log(`Setting action-on for logical seat ${firstActionPlayerLogicalIndex}`); actionSeatElement.classList.add('action-on'); } else { console.warn(`No action seat element for logical index ${firstActionPlayerLogicalIndex}`); } } else { console.warn("No action player index set."); } }
-    function updateActionButtons() { /* ... (uendret) ... */ const buttons = actionButtonsContainer.querySelectorAll('button'); buttons.forEach(btn => btn.disabled = true); if (currentScenario === 'RFI') { actionButtonsContainer.querySelector('[data-action="F"]').disabled = false; actionButtonsContainer.querySelector('[data-action="R"]').disabled = false; if (currentStackDepth === '10bb') { actionButtonsContainer.querySelector('[data-action="P"]').disabled = false; actionButtonsContainer.querySelector('[data-action="R"]').disabled = true; } } else if (currentScenario.startsWith('vs_')) { actionButtonsContainer.querySelector('[data-action="F"]').disabled = false; actionButtonsContainer.querySelector('[data-action="C"]').disabled = false; actionButtonsContainer.querySelector('[data-action="3B"]').disabled = false; if (currentStackDepth === '10bb') { actionButtonsContainer.querySelector('[data-action="P"]').disabled = false; actionButtonsContainer.querySelector('[data-action="3B"]').disabled = true; } } }
+    function displayHeroCards() { const heroVisualSeat = pokerTable.querySelector(`.seat[data-seat-id="${HERO_LOGICAL_SEAT_INDEX}"]`); if (!heroVisualSeat) { console.error("No Hero seat"); return; } const cardsContainer = heroVisualSeat.querySelector('.player-cards'); if (!cardsContainer) { console.error("No cards container in Hero seat"); return; } cardsContainer.innerHTML = ''; if (heroHand.length === 2) { heroHand.forEach(card => { const components = getCardComponents(card); const cardDiv = document.createElement('div'); cardDiv.classList.add('card', components.suitClass); cardDiv.innerHTML = `<div class="card-rank-overlay card-top-left-rank">${components.rank}</div><div class="card-suit card-suit-center">${components.suit}</div><div class="card-rank-overlay card-bottom-right-rank">${components.rank}</div>`; cardsContainer.appendChild(cardDiv); }); } else { cardsContainer.innerHTML = `<div class="card card-placeholder"></div><div class="card card-placeholder"></div>`; } }
+    function updateSeatActionVisuals(seatElement, actionInfo) { if (!seatElement) return; const actionSpan = seatElement.querySelector('.player-action'); const playerCardsDiv = seatElement.querySelector('.player-cards'); const isHero = seatElement.classList.contains('hero-seat'); seatElement.classList.remove('seat-folded', 'seat-called', 'seat-raised', 'seat-3bet', 'seat-pushed', 'seat-posted-blind'); if (actionSpan) { actionSpan.className = 'player-action'; actionSpan.textContent = ''; } if (playerCardsDiv && !isHero) { playerCardsDiv.style.opacity = '1'; playerCardsDiv.innerHTML = `<div class="card card-placeholder"></div><div class="card card-placeholder"></div>`; } if (!actionInfo) return; let actionText = '', actionClassSuffix = '', seatClassSuffix = '', cardClassSuffix = ''; switch (actionInfo.actionType.toUpperCase()) { case 'FOLD': actionText = 'Fold'; actionClassSuffix = 'fold'; seatClassSuffix = 'folded'; cardClassSuffix = 'folded'; if (playerCardsDiv && !isHero) { playerCardsDiv.innerHTML = ''; } break; case 'CALL': actionText = `Call ${actionInfo.amount} BB`; actionClassSuffix = 'call'; seatClassSuffix = 'called'; cardClassSuffix = 'called'; break; case 'RAISE': actionText = `Raise ${actionInfo.amount} BB`; actionClassSuffix = 'raise'; seatClassSuffix = 'raised'; cardClassSuffix = 'raised'; break; case '3B': actionText = `3-Bet ${actionInfo.amount} BB`; actionClassSuffix = '3bet'; seatClassSuffix = 'raised'; cardClassSuffix = '3bet'; break; case 'PUSH': actionText = `Push ${actionInfo.amount} BB`; actionClassSuffix = 'push'; seatClassSuffix = 'pushed'; cardClassSuffix = 'pushed'; break; case 'POST_SB': case 'POST_BB': actionText = `Post ${actionInfo.amount} BB`; actionClassSuffix = 'post'; seatClassSuffix = 'posted-blind'; break; default: actionText = actionInfo.actionType; } if (actionSpan) { actionSpan.textContent = actionText; if (actionClassSuffix) actionSpan.classList.add(`action-${actionClassSuffix}`); } if (seatClassSuffix) seatElement.classList.add(`seat-${seatClassSuffix}`); if (cardClassSuffix && playerCardsDiv && !isHero && cardClassSuffix !== 'folded') { playerCardsDiv.querySelectorAll('.card').forEach(card => { card.classList.remove('card-placeholder'); card.classList.remove('card-folded', 'card-called', 'card-raised', 'card-3bet', 'card-pushed'); card.classList.add(`card-${cardClassSuffix}`); card.innerHTML = ''; }); } }
+    function displayPrecedingActions() { console.log("[displayPrecedingActions] Called. Actions:", JSON.stringify(actionsPrecedingHero)); pokerTable.querySelectorAll('.seat:not(.hero-seat)').forEach(seat => { updateSeatActionVisuals(seat, null); seat.classList.remove('action-on'); }); const heroSeat = pokerTable.querySelector('.hero-seat'); if (heroSeat) { const actionSpan = heroSeat.querySelector('.player-action'); if (actionSpan) { actionSpan.className = 'player-action'; actionSpan.textContent = ''; } heroSeat.classList.remove('seat-folded', 'seat-called', 'seat-raised', 'seat-3bet', 'seat-pushed', 'seat-posted-blind', 'action-on'); } actionsPrecedingHero.forEach(actionInfo => { const logicalSeatIndex = getActualSeatIndex(actionInfo.position, currentDealerPositionIndex, numPlayers); if (logicalSeatIndex === -1) { console.warn(`Skipping unknown pos: ${actionInfo.position}`); return; } const seatElement = pokerTable.querySelector(`.seat[data-seat-id="${logicalSeatIndex}"]`); if (seatElement) { console.log(`Updating seat ${logicalSeatIndex} (${actionInfo.position}) with action: ${actionInfo.actionType}`); updateSeatActionVisuals(seatElement, actionInfo); } else { console.warn(`No seat element for logical index ${logicalSeatIndex}`); } }); if (firstActionPlayerLogicalIndex !== -1) { const actionSeatElement = pokerTable.querySelector(`.seat[data-seat-id="${firstActionPlayerLogicalIndex}"]`); if (actionSeatElement) { console.log(`Setting action-on for logical seat ${firstActionPlayerLogicalIndex}`); actionSeatElement.classList.add('action-on'); } else { console.warn(`No action seat element for logical index ${firstActionPlayerLogicalIndex}`); } } else { console.warn("No action player index set."); } }
+    function updateActionButtons() { const buttons = actionButtonsContainer.querySelectorAll('button'); buttons.forEach(btn => btn.disabled = true); if (currentScenario === 'RFI') { actionButtonsContainer.querySelector('[data-action="F"]').disabled = false; actionButtonsContainer.querySelector('[data-action="R"]').disabled = false; if (currentStackDepth === '10bb') { actionButtonsContainer.querySelector('[data-action="P"]').disabled = false; actionButtonsContainer.querySelector('[data-action="R"]').disabled = true; } } else if (currentScenario.startsWith('vs_')) { actionButtonsContainer.querySelector('[data-action="F"]').disabled = false; actionButtonsContainer.querySelector('[data-action="C"]').disabled = false; actionButtonsContainer.querySelector('[data-action="3B"]').disabled = false; if (currentStackDepth === '10bb') { actionButtonsContainer.querySelector('[data-action="P"]').disabled = false; actionButtonsContainer.querySelector('[data-action="3B"]').disabled = true; } } }
 
     // Setter opp en ny hånd, sikrer gyldig scenario
     function setupNewHand() {
@@ -110,14 +104,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 for (let i = 0; i < heroListIndex; i++) { const posName = positions[i]; if (!['SB', 'BB'].includes(posName) && GTO_RANGES[currentStackDepth]?.[`${numPlayers}max`]?.[posName]) possibleRaiserPositions.push(posName); }
                 if (possibleRaiserPositions.length > 0) {
                     const raiserPosition = possibleRaiserPositions[Math.floor(Math.random() * possibleRaiserPositions.length)]; potentialScenario = `vs_${raiserPosition}_RFI`; console.log(`Attempting: ${potentialScenario}`); const rangeExists = GTO_RANGES[currentStackDepth]?.[`${numPlayers}max`]?.[currentHeroPositionName]?.[potentialScenario];
-                    if (rangeExists) { currentScenario = potentialScenario; let raiseAmount = currentStackDepth === '10bb' ? 2 : (numPlayers === 6 ? 2.5 : 3); actionsPrecedingHero.push({ position: raiserPosition, actionType: "Raise", amount: raiseAmount }); currentPotSizeBB = 1.5 + raiseAmount; currentScenarioDescription = `${raiserPosition} -> ${raiseAmount} BB. Din tur.`; const raiserListIndex = positions.indexOf(raiserPosition); for (let i = raiserListIndex + 1; i < heroListIndex; i++) { const foldPosName = positions[i]; if (!['SB', 'BB'].includes(foldPosName)) actionsPrecedingHero.push({ position: foldPosName, actionType: "Fold" }); } firstActionPlayerLogicalIndex = HERO_LOGICAL_SEAT_INDEX; scenarioGenerated = true; console.log(`Scenario: ${currentScenario}. Action: ${firstActionPlayerLogicalIndex}`); } else { console.warn(`Range missing Hero(${currentHeroPositionName}) vs ${potentialScenario}. Fallback RFI.`); }
+                    if (rangeExists) { currentScenario = potentialScenario; let raiseAmount = currentStackDepth === '10bb' ? 2 : (numPlayers === 6 ? 2.5 : 3); actionsPrecedingHero.push({ position: raiserPosition, actionType: "Raise", amount: raiseAmount }); currentPotSizeBB = 1.5 + raiseAmount; currentScenarioDescription = `${raiserPosition} -> ${raiseAmount} BB. Din tur.`; const raiserListIndex = positions.indexOf(raiserPosition); for (let i = raiserListIndex + 1; i < heroListIndex; i++) { const foldPosName = positions[i]; if (!['SB', 'BB'].includes(foldPosName)) actionsPrecedingHero.push({ position: foldPosName, actionType: "Fold" }); } firstActionPlayerLogicalIndex = HERO_LOGICAL_SEAT_INDEX; scenarioGenerated = true; } else { console.warn(`Range missing Hero(${currentHeroPositionName}) vs ${potentialScenario}. Fallback RFI.`); }
                 }
             }
-            if (!scenarioGenerated) {
+            if (!scenarioGenerated) { // RFI Scenario
                 currentScenario = 'RFI'; currentScenarioDescription = `Foldet til deg. Din tur.`; currentPotSizeBB = 1.5; const heroListIndex = positions.indexOf(currentHeroPositionName); const firstPossibleActorIndex = (bbSeatIndex + 1) % numPlayers; let currentLogicalIndex = firstPossibleActorIndex; let safety = 0;
-                while (currentLogicalIndex !== HERO_LOGICAL_SEAT_INDEX && safety < numPlayers) { const foldPosName = calculatePositionName(currentLogicalIndex, currentDealerPositionIndex, numPlayers); if (!['SB', 'BB'].includes(foldPosName)) { actionsPrecedingHero.push({ position: foldPosName, actionType: "Fold" }); /* console.log(`Added fold for ${foldPosName}`); */ } currentLogicalIndex = (currentLogicalIndex + 1) % numPlayers; safety++; } if (safety >= numPlayers) console.error("RFI fold loop error!");
-                firstActionPlayerLogicalIndex = HERO_LOGICAL_SEAT_INDEX; console.log(`Scenario: ${currentScenario}. Action: ${firstActionPlayerLogicalIndex}`);
+                while (currentLogicalIndex !== HERO_LOGICAL_SEAT_INDEX && safety < numPlayers) { const foldPosName = calculatePositionName(currentLogicalIndex, currentDealerPositionIndex, numPlayers); if (!['SB', 'BB'].includes(foldPosName)) { actionsPrecedingHero.push({ position: foldPosName, actionType: "Fold" }); } currentLogicalIndex = (currentLogicalIndex + 1) % numPlayers; safety++; } if (safety >= numPlayers) console.error("RFI fold loop error!");
+                firstActionPlayerLogicalIndex = HERO_LOGICAL_SEAT_INDEX;
             }
+
+             console.log(`Attempt ${attemptCounter}: Scenario: ${currentScenario}, Hero Action Index: ${firstActionPlayerLogicalIndex}`);
 
             // VALIDERING: Sjekk om scenarioet er "Fold til BB" (ugyldig)
             if (currentHeroPositionName === 'BB' && currentScenario === 'RFI') {
@@ -132,18 +128,13 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePlayerPositionsRelativeToButton(); displayHeroCards(); displayPrecedingActions();
         potDisplaySpan.textContent = currentPotSizeBB.toFixed(1); updateActionButtons();
 
-        // Lagre info for denne hånden (brukes i handleUserAction)
+        // Lagre info for denne hånden
         lastHandPlayedInfo = { stack: currentStackDepth, players: numPlayers, pos: currentHeroPositionName, scenario: currentScenario };
 
-        // 6. Show Range if trainer mode
-        if (currentTrainingMode === 'trainer') {
-            rangeTitleElement.textContent = `Anbefalt Range (${currentHeroPositionName}):`; // Vis aktuell tittel
-            displayRangeGridForSituation(currentStackDepth, numPlayers, currentHeroPositionName, currentScenario);
-        } else if (rangeDisplayContainer.style.display === 'block' && lastHandPlayedInfo.pos) { // Hvis forrige range vises
-             rangeTitleElement.textContent = `Range for Forrige Hånd (${lastHandPlayedInfo.pos}):`; // Vis forrige posisjon
-        } else {
-            rangeDisplayContainer.style.display = 'none'; // Skjul hvis standard og ingen range vises fra før
-        }
+        // 6. Show Range if trainer mode / update title if not
+        if (currentTrainingMode === 'trainer') { rangeTitleElement.textContent = `Anbefalt Range (${currentHeroPositionName}):`; displayRangeGridForSituation(currentStackDepth, numPlayers, currentHeroPositionName, currentScenario); }
+        else if (rangeDisplayContainer.style.display === 'block' && lastHandPlayedInfo.pos) { rangeTitleElement.textContent = `Range for Forrige Hånd (${lastHandPlayedInfo.pos}):`; }
+        else { rangeDisplayContainer.style.display = 'none'; } // Skjul hvis standard og ingen range vist
         console.log("--- setupNewHand Finished (Valid Scenario) ---");
     }
 
@@ -152,8 +143,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const handKey = getHandKey(heroHand); if (!handKey || !currentHeroPositionName || currentHeroPositionName === '??') { console.error("Invalid state handleUserAction", {handKey, currentHeroPositionName}); return; }
         console.log(`Handling: ${currentStackDepth}, ${numPlayers}max, ${currentHeroPositionName}, ${currentScenario}, Hand: ${handKey}, Action: ${userActionCode}`);
 
-        // Lagre info om hånden som nettopp ble spilt *før* feedback
-        const infoForRangeDisplay = { ...lastHandPlayedInfo }; // Kopier for å unngå race condition med timer
+        // Bruk info fra DA hånden startet for GTO-oppslag og Range-visning
+        const infoForRangeDisplay = { ...lastHandPlayedInfo };
 
         const gtoActionObject = getGtoAction(infoForRangeDisplay.stack, infoForRangeDisplay.players, infoForRangeDisplay.pos, infoForRangeDisplay.scenario, handKey); if (!gtoActionObject) { console.error("Failed GTO obj."); feedbackText.textContent = "Error: No GTO data."; feedbackText.className = 'incorrect'; return; }
 
@@ -163,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- Vis Range & Start Timer ---
         displayRangeGridForSituation(infoForRangeDisplay.stack, infoForRangeDisplay.players, infoForRangeDisplay.pos, infoForRangeDisplay.scenario);
-        rangeTitleElement.textContent = `Range for Forrige Hånd (${infoForRangeDisplay.pos || '--'}):`; // Bruk lagret info
+        rangeTitleElement.textContent = `Range for Forrige Hånd (${infoForRangeDisplay.pos || '--'}):`; // Vis pos fra forrige
 
         const delaySeconds = parseInt(delayInput.value, 10);
         if (!isNaN(delaySeconds) && delaySeconds >= 0) { console.log(`Starting ${delaySeconds}s timer...`); autoNewHandTimer = setTimeout(() => { console.log("Auto-starting new hand."); setupNewHand(); }, delaySeconds * 1000); }
@@ -180,9 +171,26 @@ document.addEventListener('DOMContentLoaded', () => {
     positionSelect.addEventListener('change', (e) => { clearTimeout(autoNewHandTimer); if (currentTrainingMode === 'trainer') { currentFixedPosition = e.target.value; setupNewHand(); } });
     newHandBtn.addEventListener('click', () => { clearTimeout(autoNewHandTimer); setupNewHand(); });
     actionButtonsContainer.addEventListener('click', (e) => { if (e.target.tagName === 'BUTTON' && !e.target.disabled) { actionButtonsContainer.querySelectorAll('button').forEach(b => b.disabled = true); handleUserAction(e.target.dataset.action); } });
+    addToSessionBtn.addEventListener('click', handleAddToSessionClick); // Listener for new button
+    clearSessionBtn.addEventListener('click', handleClearSessionClick); // Listener for new button
 
-    // --- Initialisering ---
-    console.log("Initializing Poker Trainer V2.3...");
-    calculateVisualHeroSeatIndex(); setupTableUI(); populatePositionSelect(); setupNewHand();
-    console.log("Initialization complete.");
-});
+
+    // --- Session Accumulation ---
+    function handleAddToSessionClick() { /* ... (uendret fra V2.3) ... */ const currentCode = generateCode(false); if (Object.keys(gridState).length === 0) { alert("Gridet er tomt. Plott en range før du legger til i økten."); return; } accumulatedOutputArea.value += (accumulatedOutputArea.value ? "\n\n" : "") + currentCode; accumulatedOutputArea.scrollTop = accumulatedOutputArea.scrollHeight; console.log("Added current range to session output."); }
+    function handleClearSessionClick() { if (confirm("Er du sikker på at du vil slette all akkumulert kode for økten?")) { accumulatedOutputArea.value = ""; console.log("Accumulated session code cleared."); } }
+
+
+    // --- Code Generation & Clear (uendret fra V2.3) ---
+    function generateCode(updateSingleOutput = true) { const game = gameTypeSelect.value; const stack = stackDepthSelect.value; const pos = positionSelect.value; const scenario = scenarioSelect.value; let code = `// Generated for: ${stack} ${game} ${pos} ${scenario}\n`; if (updateSingleOutput) { code += `GTO_RANGES["${stack}"] = GTO_RANGES["${stack}"] || {};\n`; code += `GTO_RANGES["${stack}"]["${game}"] = GTO_RANGES["${stack}"]["${game}"] || {};\n`; code += `GTO_RANGES["${stack}"]["${game}"]["${pos}"] = GTO_RANGES["${stack}"]["${game}"]["${pos}"] || {};\n\n`; } const rangeObject = {}; let handKeys = Object.keys(gridState).sort(handSorter); handKeys.forEach(handKey => { const state = gridState[handKey]; if (state.action === 'M' && state.freqs) { const formattedFreqs = {}; for (const act in state.freqs) { formattedFreqs[act] = parseFloat((state.freqs[act] / 100).toFixed(2)); } rangeObject[handKey] = formattedFreqs; } else { rangeObject[handKey] = { [state.action]: 1.0 }; } }); let rangeString = JSON.stringify(rangeObject, null, 4); if (updateSingleOutput) { code += `GTO_RANGES["${stack}"]["${game}"]["${pos}"]["${scenario}"] = ${rangeString};\n`; outputCodeArea.value = code; } else { code += `GTO_RANGES["${stack}"]["${game}"]["${pos}"]["${scenario}"] = ${rangeString};\n`; } return code; }
+    function handSorter(a, b) { const rankOrder = ranks.join(''); const typeA = getType(a); const typeB = getType(b); const rankA1 = a[0]; const rankA2 = a[1]; const rankB1 = b[0]; const rankB2 = b[1]; if (typeA !== typeB) return typeA - typeB; if (rankA1 !== rankB1) return rankOrder.indexOf(rankA1) - rankOrder.indexOf(rankB1); return rankOrder.indexOf(rankA2) - rankOrder.indexOf(rankB2); }
+    function getType(hand) { if (hand.length === 2) return 1; if (hand[2] === 's') return 2; return 3; }
+    function copyCode() { if (!outputCodeArea.value) return; navigator.clipboard.writeText(outputCodeArea.value).then(() => { copyFeedback.classList.add('show'); setTimeout(() => copyFeedback.classList.remove('show'), 1500); }).catch(err => { console.error('Failed to copy: ', err); alert('Kunne ikke kopiere. Prøv manuelt.'); }); }
+    function clearGrid(updateVisuals = true) { gridState = {}; if (updateVisuals) { rangeGrid.querySelectorAll('.grid-cell').forEach(cell => { updateCellVisuals(cell, cell.dataset.handkey); }); } outputCodeArea.value = ''; console.log("Grid State Cleared"); }
+
+
+    // --- Start ---
+    init();
+    </script>
+
+</body>
+</html>
